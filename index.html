@@ -1,0 +1,2678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MASTERMATH | Safe Pro Edition</title>
+    <link rel="manifest" href="manifest.json">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: #f0f2f5; color: #1e293b; user-select: none; }
+        .glass { background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); }
+        .math-gradient { background: linear-gradient(135deg, #4f46e5 0%, #0ea5e9 100%); }
+        #question { color: #1e293b !important; font-weight: 800; text-shadow: none; }
+        #ansInput { background: #f8fafc !important; border: 2px solid #e2e8f0 !important; color: #1e293b !important; }
+        .hidden { display: none !important; }
+        #rulesModal { backdrop-filter: blur(5px); }
+
+.fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  /* Custom Scrollbar para sa Rules Modal */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #3b82f6; /* Kulay Blue na katulad ng MasterMath theme */
+    border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+/* Siguradong laging nasa harap ang modal */
+#rulesModal {
+    z-index: 9999;
+}
+  </style>
+</head>
+<body class="min-h-screen pb-10" oncontextmenu="return false;">
+
+    <audio id="sndCorrect" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3"></audio>
+    <audio id="sndWrong" src="https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3"></audio>
+    <audio id="sndClick" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
+
+    <div id="authSection" class="max-w-md mx-auto pt-10 px-4 fade-in">
+        <div class="glass p-8 rounded-[2.5rem] shadow-2xl text-slate-800 border-t-8 border-indigo-600 text-center">
+            <div class="flex flex-col items-center justify-center mb-8 fade-in">
+                <div class="relative group">
+                    <div class="absolute inset-0 bg-yellow-500/20 blur-3xl rounded-full animate-pulse"></div>
+                    <div class="relative w-40 h-40 rounded-full border-4 border-indigo-600 bg-[#1e293b] flex items-center justify-center overflow-hidden shadow-[0_0_50px_rgba(79,70,229,0.3)]">
+                        <div class="text-center">
+                            <div class="text-5xl font-black text-white italic tracking-tighter">M<span class="text-yellow-500">M</span></div>
+                            <div class="text-[8px] font-bold text-indigo-300 uppercase tracking-widest mt-1">Excellent In Learning</div>
+                        </div>
+                    </div>
+                </div>
+                <p class="mt-4 text-[11px] font-black text-indigo-600 uppercase tracking-[0.5em] italic">MASTERMATH</p>
+            </div>
+<div id="reset-modal" style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 20px; box-shadow: 0px 10px 50px rgba(0,0,0,0.5); z-index: 999999 !important; width: 85%; max-width: 350px; text-align: center; border: 2px solid #6366f1;">
+    <h3 style="color: #333; margin-bottom: 15px;">Reset Password</h3>
+    
+    <input type="text" id="reset-username" placeholder="Username" style="width: 100%; margin-bottom: 10px; padding: 12px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box;">
+    
+    <input type="text" id="reset-referral" placeholder="Referral Code (MM-XXX)" style="width: 100%; margin-bottom: 10px; padding: 12px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box;">
+    
+    <input type="password" id="new-password" placeholder="New Password" style="width: 100%; margin-bottom: 20px; padding: 12px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box;">
+    
+    <button onclick="handleManualReset()" style="width: 100%; background: #6366f1; color: white; padding: 12px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;">UPDATE PASSWORD</button>
+    
+    <button onclick="document.getElementById('reset-modal').style.display='none'" style="width: 100%; background: transparent; color: #888; margin-top: 10px; border: none; cursor: pointer;">Cancel</button>
+    
+    <p id="reset-status" style="margin-top: 15px; font-size: 13px; font-weight: bold;"></p>
+</div>
+
+            <p id="authTitle" class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1 mb-2">Create New Account</p>
+            <div class="bg-indigo-100 text-indigo-700 py-2 px-6 rounded-full text-xs font-black uppercase mb-6 inline-block animate-pulse italic">🎁 Receive Welcome Bonus!</div>
+            
+            <div class="space-y-4 text-left">
+                <div id="fullNameGroup"><input type="text" id="nameIn" placeholder="Full Name" class="w-full px-5 py-3 rounded-2xl border-2 border-slate-100 outline-none focus:border-indigo-500 font-medium"></div>
+                <input type="text" id="userIn" placeholder="Username" class="w-full px-5 py-3 rounded-2xl border-2 border-slate-100 outline-none focus:border-indigo-500 font-medium">
+                <input type="password" id="passIn" placeholder="Password" class="w-full px-5 py-3 rounded-2xl border-2 border-slate-100 outline-none focus:border-indigo-500 font-medium">
+                <div id="refGroup"><input type="text" id="refIn" placeholder="Referral Code (MM-XXXX)" class="w-full px-5 py-3 rounded-2xl border-2 border-slate-100 outline-none font-bold text-indigo-600 uppercase"></div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; width: 100%; max-width: 350px;">
+    
+    <label style="font-size: 14px; color: #555; display: flex; align-items: center; cursor: pointer;">
+        <input type="checkbox" id="remember-me" style="margin-right: 8px;"> 
+        Remember me
+    </label>
+
+    <a href="#" onclick="showResetForm()" id="forgot-password-link" style="font-size: 14px; color: #0056b3; text-decoration: none;">
+    Forgot Password?
+</a>
+
+</div>
+
+      <button id="mainAuthBtn" onclick="handleAuth();" class="w-full math-gradient text-white font-extrabold py-4 rounded-2xl uppercase shadow-lg mt-2 active:scale-95 transition-all">Claim Rewards & Register</button>
+                <p class="text-center text-[11px] font-bold text-slate-500 mt-4">
+                    <span id="toggleText">Already have an account?</span> 
+                    <button onclick="toggleAuth();" id="toggleBtn" class="text-indigo-600 underline ml-1">Login Here</button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashSection" class="hidden w-full max-w-5xl mx-auto px-4">
+        <div class="sticky-header mb-4">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                <div onclick="adminSecret()" class="glass p-3 rounded-2xl border-b-4 border-blue-500 text-center cursor-pointer">
+                    <p class="text-[8px] font-bold text-slate-400 uppercase">User</p>
+                    <p id="outName" class="font-bold text-slate-800 truncate text-[10px]">---</p>
+                </div>
+                <div id="refBox" onclick="showReferralHistory()" class="glass p-3 rounded-2xl border-b-4 border-indigo-500 text-center cursor-pointer" style="position: relative; z-index: 10; cursor: pointer !important;">
+    <p class="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">REFFERAL BONUS MONITORING</p>
+    <p id="outBonus"class="font-bold text-indigo-600 text-xs">0.00</p>
+</div>
+ <div class="glass p-3 rounded-2xl border-b-4 border-purple-500 text-center">
+                    <p class="text-[8px] font-bold text-slate-400 uppercase font-black tracking-tighter">TOTAL POINTS</p>
+                    <p id="outPoints" class="font-bold text-purple-600 text-xs">0.00</p>
+                </div>
+                <div class="glass p-3 rounded-2xl border-b-4 border-purple-500 text-center">
+                    <p class="text-[8px] font-bold text-slate-400 uppercase font-black tracking-tighter">CONVERT TO PESO(With Invites)</p>
+                    <p id="outPesoWith" class="font-bold text-purple-600 text-xs">0.00</p>
+</p>
+</div>
+<div class="glass p-3 rounded-2xl border-b-4 border-purple-500 text-center">
+                    <p class="text-[8px] font-bold text-slate-400 uppercase font-black tracking-tighter">CONVERT TO PESO(No Invites)</p>
+                    <p id="outPesoNo" class="font-bold text-purple-600 text-xs">0.00</p>
+</div>
+<button onclick="logout();" class="bg-red-500 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-md">LOGOUT</button>
+            </div>
+        <input id="shareLink" type="text" style="position: absolute; left: -9999px;">
+</div>
+
+        <div class="flex flex-col lg:flex-row gap-4 mt-4">
+            <div class="glass p-6 rounded-[2rem] border-l-8 border-indigo-600 lg:w-1/3 h-fit shadow-lg">
+                <h3 class="text-xs font-black text-slate-800 uppercase mb-4 italic underline decoration-indigo-500">MASTERMATH REWARDS</h3>
+                <div class="space-y-3 text-[10px] font-bold text-slate-600">
+                    <p class="text-green-600 font-black">🎁1000.00 Points is to ₱10.00 with invite ₱5.71 no invite Welcome Bonus</p>
+                    <p>• ₱0.80 per correct answer</p>
+                    <p class="text-indigo-600 font-black">🤝2500.00 Point is to ₱25.00 Referral Bonus</p>
+                    <p class="text-red-500 font-black uppercase">✅PAY ONCE FOR LIFETIME ACCOUNT!</p>
+                    <p id="dailyLimitOut" class="text-blue-600 font-black">🛎️DAILY GAMES: 0 / 50</p>
+                    <p class="text-orange-600 font-black uppercase">📱PLAY AND EARN 💸</p>
+                    <p class="text-orange-600 font-black uppercase">✴️CONVERTION POINTS TO PESO✴️</p> 
+                   <p class="text-green-600 font-black">• WithOut Invites Rate•</p> 
+      <p class="text-indigo-600 font-black">=2,100 POINTS = ₱12.00</p> 
+      <p class="text-green-600 font-black">• With Invites Rate•</p> 
+      <p class="text-indigo-600 font-black">=1,800 POINTS = ₱18.00</p> 
+      <p class="text-orange-600 font-black uppercase">💸 WITHDRAWAL RULES💸</p> 
+      <p class="text-purple-600 font-black">
+Cash Out Amount ||  Points Needed (With Invites)
+•₱300.00---------30,000 POINTS-----------
+•₱600.00---------60,000 POINTS-----------
+•₱1000.00-------100,000 POINTS----------</p> 
+     <p class="text-purple-600 font-black">
+Cash Out Amount ||  Points Needed (No Invites)
+•₱300.00---------52,500 POINTS-----------
+•₱600.00---------105,000 POINTS-----------
+•₱1000.00-------175,000 POINTS----------</p> 
+<p class="text-green-600 font-black">🎮PLAY MORE &EARN MORE💸.</p>
+                </div>
+            </div>
+            <div class="glass p-6 rounded-[2rem] border-l-8 border-indigo-600 lg:w-1/3 h-fit shadow-lg">
+                <h3 class="text-xs font-black text-slate-800 uppercase mb-4 italic underline decoration-indigo-500">MASTERMATH REMINDERS</h3>
+                <div class="space-y-3 text-[10px] font-bold text-slate-600">
+                    <p class="text-red-500 font-black uppercase">⚠️ -30.00 Points PENALTY FOR ERROR</p>
+                    <p class="text-orange-600 font-black uppercase">⚙ 10% WITHDRAWAL FEE (All)</p>
+                    <p class="text-orange-600 font-black uppercase">🙅 Bawal Mag Cashout Kung kulang /Sobra FIXED Amount Input Dapat</p>
+                    <p class="text-orange-600 font-black uppercase">📍FIXED 300,600,1000 ang INPUT AMOUNT</p>
+                    <p class="text-red-500 font-black uppercase">✅ Follow The Time & Date Schedule For PayOut</p>
+                    <p class="text-red-500 font-black uppercase">✅ Always Check Your Input Details For No Error/ Penalties!</p>
+                    <p class="text-red-500 font-black uppercase">🙅 STRICTLY NO RETURN/REFUND!!</p>
+                    <p class="text-red-500 font-black uppercase">🚫 CHEATING PROHIBITED AUTOMATICALLY BANNED YOUR ACCOUNT!</p>
+                    <p class="text-red-500 font-black uppercase">📣FOLLOW THE RULES for safety ACCOUNT!</p>
+                </div>
+
+                <div id="dashboardExtra" class="mt-4 p-3 bg-indigo-50 rounded-2xl border border-indigo-100 flex justify-between items-center">
+    <div>
+        <p class="text-[9px] font-black text-indigo-400 uppercase">Referral ID</p>
+        <p id="myRefCode" class="text-xs font-black text-slate-700">MM-3900</p>
+    </div>
+    <button onclick="copyLink()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-[10px] font-bold">
+        🔗 SHARE LINK
+    </button>
+</div>
+
+<input id="shareLink" type="text" class="hidden">
+                <p id="copyToast" class="text-[8px] text-emerald-600 font-bold uppercase mt-1 text-center hidden">Copied to clipboard!</p>
+
+                <button onclick="toggleWithdraw();" id="wdToggleBtn" class="w-full bg-slate-900 text-white py-3 rounded-xl mt-4 font-black text-[10px] uppercase">Open Withdrawal Hub</button>
+            </div>
+          
+                <div id="withdrawUI" class="hidden w-full fade-in space-y-6 text-left bg-white p-4 rounded-3xl shadow-sm">
+    <h2 class="text-2xl font-black italic uppercase text-indigo-600 text-center">Cashout Hub</h2>
+    
+    <div class="space-y-3">
+        <select id="payoutMethod" class="w-full p-3 rounded-xl border-2 border-slate-100 font-bold text-sm outline-none text-slate-800 bg-slate-50">
+            <option value="GCash">GCASH</option>
+            <option value="Maya">MAYA</option>
+        </select>
+        
+        <select id="wdAmount" class="w-full p-3 rounded-xl border-2 border-slate-100 font-bold text-sm outline-none text-slate-800 bg-slate-50">
+            <option value="0">SELECT AMOUNT</option>
+            <option value="300">₱300 (Thu 8:00-9:00AM)</option>
+            <option value="600">₱600 (Sat 7:15 AM-8:10 AM)</option>
+            <option value="1000">₱1000 (Mon 3:00-4:00 PM)</option>
+        </select>
+
+        <input type="number" id="manualAmount" placeholder="Verify Amount" class="w-full p-3 rounded-xl border-2 border-slate-100 font-bold text-sm outline-none bg-slate-50">
+        <input type="text" id="wdNumber" placeholder="Mobile Number" class="w-full p-3 rounded-xl border-2 border-slate-100 font-bold text-sm outline-none bg-slate-50">
+        
+        <button onclick="handleWithdraw()" class="w-full bg-emerald-500 text-white font-black py-4 rounded-xl text-lg shadow-lg uppercase active:scale-95 transition-all">
+            Confirm Payout
+        </button>
+    </div>
+
+    <div class="bg-slate-50 p-4 rounded-2xl h-48 overflow-y-auto border border-slate-100">
+        <p class="text-[9px] font-black uppercase text-slate-400 mb-2 tracking-widest">Transaction History</p>
+        <div id="historyList" class="flex flex-col gap-3">
+            </div>
+    </div>
+
+    <p onclick="toggleWithdraw()" class="text-center text-slate-400 font-bold text-[10px] uppercase cursor-pointer mt-4 hover:text-indigo-600 transition-colors">
+        × BACK TO DASHBOARD ×
+    </p>
+</div> 
+<div id="mainHub" class="lg:w-2/3 glass rounded-[2.5rem] p-4 shadow-2xl text-center flex flex-col items-center border-t-8 border-indigo-600 relative mt-4 h-auto">
+                <div id="gameUI" class="w-full my-auto">
+                    <<div id="readyUI" class="fade-in space-y-6 text-center">
+    <h2 class="text-4xl font-black text-slate-800 tracking-wider">🧠MASTERMATH GAME🧠</h2>
+    
+    <div class="grid grid-cols-2 gap-4 mt-6">
+        <div onclick="selectCategory('pure')" id="card-pure" class="p-4 bg-white rounded-2xl border-4 border-blue-500 shadow-md cursor-pointer transform transition active:scale-95">
+            <div class="text-3xl mb-1">🧮</div>
+            <span class="font-black text-slate-700 block text-sm">PURE SOLVING</span>
+        </div>
+
+        <div onclick="selectCategory('tap')" id="card-tap" class="p-4 bg-white rounded-2xl border-2 border-slate-200 opacity-60 shadow-sm cursor-pointer transform transition active:scale-95">
+            <div class="text-3xl mb-1">👆</div>
+            <span class="font-black text-slate-400 block text-sm">TAP GAME</span>
+        </div>
+    </div>
+
+    <button onclick="startSelectedGame()" id="mainStartBtn" class="w-full mt-6 bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-5 rounded-2xl font-black text-xl shadow-lg active:scale-95 transition">
+        START PLAY
+    </button>
+<div id="penaltyOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; color:white; text-align:center; padding-top:50%; font-family: sans-serif;">
+    <h2 style="color: #ff4444; font-weight: 900; margin-bottom: 10px;">⚠️ HINDI MO TINAPOS ANG ISANG TANONG!</h2>
+    <p style="font-size: 1.2rem;">Maghintay ng <span id="penaltyTimer" style="font-weight:bold; font-size: 2.5rem; color: #ffeb3b;">25</span>s bago makabalik!</p>
+    <div id="readyMessage" style="display:none; color: #00ff00; font-weight: bold; margin-top: 20px; font-size: 1.5rem;">✅ PWEDE KA NA BUMALIK!</div>
+</div>
+</div>
+<div id="tapGameUI" class="hidden w-full h-80 bg-slate-50 rounded-3xl relative overflow-hidden border-2 border-dashed border-slate-200 fade-in flex flex-col items-center justify-center p-6">
+    
+    <div id="tapFeedback" class="absolute inset-0 z-30 hidden flex flex-col items-center justify-center bg-white/95 backdrop-blur-sm text-center p-6">
+        <h2 id="feedbackText" class="text-xl font-black mb-2 italic uppercase">Checking...</h2>
+        <p id="cooldownTagline" class="text-[9px] text-slate-400 italic uppercase tracking-[0.2em] mb-4"></p>
+        <div id="cooldownTimer" class="text-xs font-bold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-full"></div>
+        
+        <button onclick="exitTapGame()" class="mt-8 text-slate-400 text-[10px] font-bold uppercase tracking-widest hover:text-red-500 transition">
+            × Close & Exit
+        </button>
+    </div>
+
+    <div id="questionBox" class="text-center w-full flex flex-col items-center">
+        <p class="text-[9px] font-black text-slate-300 uppercase tracking-[0.4em] mb-2">Number</p>
+        <div id="tapNumber" class="text-7xl font-black text-slate-800 italic mb-8">-</div>
+        
+        <div class="grid grid-cols-2 gap-4 w-full max-w-xs px-6 mb-8">
+            <button onclick="checkTapAnswer('ODD')" class="py-4 bg-white border-b-4 border-indigo-100 rounded-2xl shadow-sm active:scale-95 transition-all font-black text-indigo-600 text-xl italic">
+                <span class="block">ODD</span>
+            </button>
+            <button onclick="checkTapAnswer('EVEN')" class="py-4 bg-white border-b-4 border-indigo-100 rounded-2xl shadow-sm active:scale-95 transition-all font-black text-indigo-600 text-xl italic">
+                <span class="block">EVEN</span>
+            </button>
+        </div>
+
+        <button onclick="exitTapGame()" class="text-slate-400 text-[10px] font-bold uppercase tracking-widest hover:text-red-500 transition">
+            ← BACK TO MENU
+        </button>
+    </div> </div> 
+    
+<div id="playUI" class="hidden w-full space-y-6 fade-in relative">
+    <div class="flex justify-start">
+   <button onclick="exitPureSolving()" class="mt-8 text-slate-400 text-[10px] font-bold uppercase tracking-widest hover:text-red-500 transition">
+    × Close & Exit
+</button>
+ </div>
+       <input type="text" id="botTrap" class="hidden" tabindex="-1" autocomplete="off">
+    <div id="question" class="text-7xl font-black mb-4 text-center text-slate-800">---</div>
+    <input type="number" id="ansInput" class="w-full p-4 border-2 border-slate-100 rounded-2xl text-center text-2xl font-bold focus:border-blue-500 focus:outline-none transition" placeholder="Your Answer">
+    <button onclick="processAnswer()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-5 rounded-2xl font-black text-xl shadow-lg active:scale-95 transition">SUBMIT</button>
+    </div>
+
+<div id="waitUI" class="hidden space-y-6 fade-in relative text-center">
+     <div id="feedback" class="text-3xl font-black italic uppercase"></div>
+    <div class="text-6xl font-black text-slate-800">
+        <span id="timer">0</span>s
+     <p class="text-green-600 font-bold text-sm">🚀 handa kana ba sa susunod na round?
+    
+<button onclick="exitPureSolving()" class="mt-8 text-slate-400 text-[10px] font-bold uppercase tracking-widest hover:text-red-500 transition">
+    × Close & Exit
+</button>
+</div>
+</div>
+
+
+             
+
+ <div id="adminPanel" class="hidden fixed inset-0 bg-slate-900/95 z-[200] p-6 overflow-y-auto">
+    <div class="max-w-2xl mx-auto">
+        <div class="flex justify-between items-center mb-6 text-white font-black">
+            <h2 class="text-2xl italic tracking-tighter">MASTERMATH ADMIN</h2>
+            <button onclick="toggleAdmin()" class="bg-red-500 px-4 py-2 rounded-lg active:scale-95 transition-all">CLOSE</button>
+        </div>
+        
+        <div class="bg-white rounded-[2rem] p-6 shadow-2xl">
+            <h2 class="font-black text-xl italic text-slate-800 mb-6">ADMIN MONITORING</h2>
+
+            <h3 class="font-black text-emerald-600 text-[10px] mb-3 uppercase tracking-widest">👥 PLAYER MASTERLIST</h3>
+            <div id="adminPlayerList" class="space-y-3"></div>
+            
+            <hr class="my-6 border-slate-100">
+            
+            <h3 class="font-black text-indigo-600 text-[10px] mb-3 uppercase tracking-widest">💰 PENDING WITHDRAWALS</h3>
+            <div id="adminWithdrawList" class="space-y-3"></div>
+    <div style="margin-top: 30px; margin-bottom: 20px; padding: 20px; background: #ffffff; border-radius: 25px; border: 1px solid #e2e8f0; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
+        <h3 style="font-size: 14px; color: #1e293b; font-weight: 900; text-transform: uppercase; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+            📊 Admin Transaction Logs
+        </h3>
+       <div style="margin-top: 20px; background: #ffffff; padding: 15px; border-radius: 1rem; border: 1px solid #f1f5f9;">
+    <h3 style="font-size: 14px; font-weight: 900; color: #4f46e5; margin-bottom: 10px;">
+        👥 REFERRAL MONITORING
+    </h3>
+    
+    <div style="max-height: 250px; overflow-y: auto; border-radius: 0.5rem;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left;">
+            <thead style="position: sticky; top: 0; background: #f8fafc; z-index: 10;">
+                <tr style="border-bottom: 2px solid #e2e8f0;">
+                    <th style="padding: 8px;">UPLINE (Inviter)</th>
+                    <th style="padding: 8px;">REF ID</th>
+                    <th style="padding: 8px;">DOWNLINE</th>
+                    <th style="padding: 8px;">BONUS</th>
+                    <th style="padding: 8px;">DATE/TIME</th>
+                </tr>
+            </thead>
+            <tbody id="adminReferralLog">
+                </tbody>
+        </table>
+    </div>
+</div>
+ 
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            
+            <div style="background: #f0fdf4; padding: 15px; border-radius: 18px; border: 1px solid #bbf7d0;">
+                <h4 style="font-size: 10px; color: #166534; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 5px;">
+                    ✅ PAID HISTORY
+                </h4>
+                <div id="adminPaidHistory" style="max-height: 350px; overflow-y: auto; font-size: 9px;">
+                    <p style="text-align:center; color:#94a3b8;">Loading...</p>
+                </div>
+            </div>
+
+            <div style="background: #fef2f2; padding: 15px; border-radius: 18px; border: 1px solid #fecaca;">
+                <h4 style="font-size: 10px; color: #991b1b; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 5px;">
+                    🚨 DENIED HISTORY
+                </h4>
+                <div id="adminDeniedHistory" style="max-height: 350px; overflow-y: auto; font-size: 9px;">
+                    <p style="text-align:center; color:#94a3b8;">Loading...</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    
+            <hr class="my-6 border-slate-100">
+
+            <h3 class="font-black text-red-600 text-[14px] italic uppercase mb-4 flex justify-between items-center">
+                <span>🚫 Rejected Withdrawals History</span>
+                   
+    
+              <span class="text-[8px] bg-slate-100 text-slate-400 px-2 py-1 rounded italic">Auto-Filter Active</span>
+            </h3>
+
+            <div id="adminRejectedList" class="space-y-3"></div>
+        </div>
+    </div>
+</div>
+<div id="rulesModal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
+
+    
+<div class="bg-white rounded-[1.5rem] max-w-md w-full max-h-[88vh] flex flex-col shadow-2xl overflow-hidden relative mx-4 border-[2px] border-blue-600">
+    
+    <div class="bg-blue-600 p-3 text-white text-center">
+        <h1 class="text-lg font-black italic tracking-tighter leading-none">🧠 MASTERMATH 🧠</h1>
+        <p class="text-[8px] uppercase tracking-[3px] font-bold opacity-80 mt-1">Safe Pro Edition</p>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-4 space-y-5 text-[10.5px] text-gray-800 leading-snug custom-scrollbar bg-white">
+        
+        <div>
+            <p class="font-bold text-center">🧠 WELCOME TO MASTERMATH🧠</p>
+           <p class="text-center font-black text-blue-700 text-[11px] tracking-widest uppercase border-y py-1">🔊UGALIING MAGBASA PARA ALAM MO🔊</p>
+           <p class="mt-1">Ang MasterMath Pro ay isang platform kung saan ang pag-aaral ng math ay nagiging rewarding. </p>
+            <p class="mt-1">Ang bawat tamang sagot at bawat referral ay may katumbas na puntos na maaaring i-convert sa totoong pera.</p>
+        </div>
+
+        <p class="text-center font-black text-blue-700 text-[11px] tracking-widest uppercase border-y py-1">📜 OFFICIAL RULES & GUIDELINES📜</p>
+
+        <div class="space-y-4">
+            <p><b>1. 🔓ACTIVATION ACCOUNT 🔓</b><br>
+               •Ang bawat account ay kailangang dumaan sa "Activation" process gamit ang isang Activation Key bago makapagsimulang kumita.<br>
+               •Pay for ₱160.00 for Lifetime Access!<br>
+               •No RETURN and REFUND!</p>
+
+            <p><b>2.🛡️ACCOUNT SECURITY🛡️</b><br>                
+            •🔓 Activation Key is PERMANENT! Activation Key ay ibinibigay lang nang isang beses. Kung mawala nila ito o makalimutan ang password, mahihirapan silang i-recover ang account dahil sa ating "Safe Pro" security.</p>
+
+            <p><b>3.📱 STRICTLY ONE ACCOUNT FOR DEVICE📱</b><br>
+                  •Bawal ang maraming account sa iisang device.<br>
+            •Ang pangalawang account na gagawin sa iisang phone ay maba-brand na "DUPLICATE". Pag na detect ng System na Duplicate Automatically BANNED!!</p>
+
+            <p><b>4. 🔒 DEVICE LOCKING SECURITY 🔒</b><br>
+                        •Ang iyong account ay naka-lock sa phone na ginamit mo sa pag-register.<br>
+                   •Hindi mo ito mabubuksan sa ibang cellphone para maiwasan ang hacking at account selling.<br>
+              •Kung kailangang magpalit ng device or any reason na hindi dahilan ng MASTERMATH repayment is REQUIRED!!</p>
+
+            <p><b>5.💸 MASTERMATH REWARDS💸</b><br>
+                       •PAY ONCE FOR LIFETIME ACCESS<br>
+                      •Welcome Bonus: Makakakuha ka ng(1000.00 Points is to ₱10.00 with invite at ₱5.71 no invite agad pagka-click ng "I Agree".<br>
+                    •Earn ₱0.80 Points Every Correct Answer.<br>
+                  •Inviting is OPTIONAL more INVITES more EARN.<br>
+               •Referral Bonus(2500 points is to  ₱25.00.<br>
+               • Pag naka 12 kang Invites May ₱300.00 Pesos kana agad ✅!<br>
+               •STRICTLY!! UPPERCASE input of REFFERAL ID ex. MM-1234 ✅ para pumasok ang refferal.<br>
+        •Referral Monitoring: Maaaring i-check ang referral bonus sa dashboard (Click ang refferal bonus monitoring mismo).</p>
+  
+   <p><b>6. 🎮 GAME PLAY LOGIC🎮</b><br>
+             •BASIC MATH Pure Solving At TAP GAME.<br>
+             •Walang Bawas sa Points Pag nagkamali ng Sagot.<br>
+             •Bawat Sagot 5s bago Makita Ang Result.<br>
+             •40s waiting for next question.<br>
+             •Bawat Tamang Sagot may katumbas na reward ₱0.80 Points.<br>
+            •Daily Limit sa Pag solve 145 questions.</p>
+            •Taposin ang Isang laro bago mag exit sa game para iwas 25s penalty waiting bago makabalik sa laro.</p>
+           
+ <p><b>7.💸 CONVERTION FOR POINTS 💸</b><br>
+         <p><b>🤝WITH INVITES NEED POINTS🤝</b><br>
+             •POINTS- Dapat malinaw kung magkano ang katumbas ng points sa Peso.<br>
+          •Conversion (With Invites): Mas mataas ang palitan kung may invites: 1,800 Points = ₱18.00.<br>
+            •Conversion (No Invites): Kung walang invites, ang rate ay 2,100 Points = ₱12.00.
+             <p><b>🤝WITH INVITES NEED POINTS🤝</b><br>
+                    •💸FOR ₱300.00 ------30,000 POINTS ✅<br>
+                   •💸FOR ₱600.00 ------60,000 POINTS ✅<br>
+                   •💸FOR ₱1000.00------100,000 POINTS ✅<br>
+        <p><b>🤝NO INVITES NEED POINTS🤝</b><br>
+                  •💸FOR ₱300.00 -----52,500 POINTS----- ✅<br>
+                  •💸FOR ₱600.00 -----105,000 POINTS----- ✅<br>
+                  •💸FOR ₱1000.00 -----175,000 POINTS----- ✅<br>
+             •Ang iyong kinita mula sa MASTERMATH challenges at referrals ay maiipon sa iyong MasterMath TOTAL POINTS.</p>
+
+            <div class="bg-amber-50 p-2 rounded-lg border border-amber-200 shadow-sm">
+                <p><b>8.🧾PAYOUT PROCESS/RULES🧾</b><br>
+                •Maaari ka lamang mag-payout kapag pasok sa minimum at maximum FIXED AMOUNT Input (300,600,1000)--no MORE no LESS!!<br>
+                •Sundin ang TIME&DATE SCHEDULE sa payout siguraduhin lahat ng details input nyo Tama dahil Pag nasubmit na hindi na mababago.<br>
+                •Maling Input ng Amount Mababawasan ka ng 30.00 points.<br>
+                •Hindi sumunod sa TIME& DATE PAYOUT SCHEDULE penalty 30.00 points.</p>
+
+<div class="bg-red-50 p-2 rounded-lg border border-red-100">
+                <p><b>9.🗓️PAYOUT TIME&DATE SCHEDULE🗓️</b><br>
+                •(₱300--Thu-8:00-9:00 AM) no ADVANCE no LATE<br>
+                •(₱600--Sat-7:15-8:10 AM) no ADVANCE no LATE<br>
+                •(₱1000--Mon-3:00-4:00 PM) no ADVANCE no LATE<br>
+   <span class="text-red-600 font-bold">°^BAWAL ang advance at late! Pag Advance or late hindi magproproceed ang request payout -30.00 Points.^°</span></p>
+            </div>
+           
+   <p><b>10.💳WITHDRAWAL FEE💳</b><br>
+             •GCASH PAYOUT METHOD 10% Processing Fee para sa 300,600,1000<br>
+             •MAYA PAYOUT METHOD 10%+ ₱20.00 charge.</p>
+             • GCASH---300-10%= ₱270.00 PAID💸<br>
+             •GCASH---600-10%= ₱540.00 PAID💸<br>
+             •GCASH---1000-10%= ₱900.00 PAID💸<br>
+             •MAYA---300-10%-20= ₱250.00 PAID💸<br>
+             •MAYA---600-10%-20= ₱520.00 PAID💸<br>
+             •MAYA---1000-10%-20= ₱880.00 PAID💸</p>
+ 
+ <p><b>11.📋PAYOUT DETAILS📋</b><br>
+               •Siguraduhin na TAMA ang mobile number ,amount,payout methods na ilalagay sa payout request. Para hindi magkaroon ng PENALTY!!Hindi na ito mababago kapag na-submit na.<br>
+              •Siguraduhing TAMA ang iyong personal details para sa mabilis at ligtas na payout process.</p>
+
+            <p><b>12.🚫 ANTI-CHEAT POLICY 🚫</b><br>
+            •Ang paggamit ng Auto-Clickers o anumang Hacking Scripts ay MAHIGPIT na IPINAGBABAWAL!<br>
+            •"Binabantayan" ng system Ang Bawat Account!<br>
+            •Input Speed Detection- Kung masyadong mabilis ang pagsagot (parang bot), pwedeng ma-hold ang account for review.<br>
+            •Kapag na-detect ng system na nandadaya ang player, ang account ay i-ba-BAN at lahat ng kinita ay ma-fo-Forfeit.</p>
+
+            <p><b>13.⏳ WITHDRAWAL PROCESSING ⏳</b><br>
+            •Ang lahat ng payout requests ay pino-proseso sa loob ng 24 hanggang 48 oras. Pero depende sa dami ng PAYOUTERS.<br>
+            •Maging mapag pasensya at iwasan ang pag-spam sa Admin para sa mabilis na transaksyon.</p>
+
+            <p><b>14. 📱APP UPDATES📱</b><br>
+            •Original Source: Paalala mag-download o mag-update lamang mula sa official link na ibinigay Sayo. Ang paggamit ng "Modded" o "Hacked" version ng MasterMath ay automatic BANNED!</p>
+        </div>
+
+        <div class="bg-gray-100 p-3 rounded-xl space-y-2 mt-4 border border-gray-200">
+            <p class="font-black text-red-600 text-center uppercase tracking-widest text-[10px]">⚠️ MASTERMATH: OFFICIAL DISCLAIMER</p>
+            
+            <p><b>1. No Guarantee of Earnings:</b> Ang MasterMath ay isang educational platform... Hindi namin ginagarantiya ang FIXED o MABILIS na kita para sa lahat.</p>
+            
+            <p><b>2. User Responsibility & Security:</b> Ang bawat user ay responsable sa seguridad ng kanilang account... Ang anumang pagkawala ng access ay hindi pananagutan ng MasterMath.</p>
+            
+            <p><b>3. Anti-Fraud & Account Termination:</b> Zero-Tolerance Policy laban sa pandaraya. Paggamit ng VPN, Proxy, Emulators, Auto-clickers, Scripts, o Duplicate Accounts ay magreresulta sa auto-freeze at permanent ban.</p>
+            
+            <p><b>4. System Integrity & Maintenance:</b> Hindi kami mananagot sa anumang technical glitches, internet issues, o pansamantalang downtime.</p>
+            
+            <p><b>5. FINAL DECISION:</b> Ang lahat ng desisyon ng MasterMath management hinggil sa payouts, disputes, at account violations ay **Final at hindi na maaaring baguhin (irrevocable).Ang pag-gamit sa app na ito ay nangangahulugang tinatanggap mo ang lahat ng tuntuning nakasaad dito.**</p>
+        </div>
+    </div>
+
+    <div class="p-4 bg-white border-t">
+        <button onclick="closeRules()" class="w-full bg-blue-600 text-white font-black py-3 rounded-xl shadow-lg active:scale-95 transition-all uppercase text-[12px] tracking-widest">
+            I AGREE & START PLAYING 🎮
+        </button>
+    </div>
+</div>
+
+</div>
+
+
+<script>
+   //function 1 
+ // --- 1. FIREBASE CONFIGURATION (ITO YUNG BINIGAY MO) ---
+    const firebaseConfig = {
+  apiKey: "AIzaSyDW9Kr2Z3EJfJVsJv7sFPY7TG0pwKwBNXc",
+  authDomain: "mastermath-pro-94a7a.firebaseapp.com",
+  databaseURL: "https://mastermath-pro-94a7a-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "mastermath-pro-94a7a",
+  storageBucket: "mastermath-pro-94a7a.firebasestorage.app",
+  messagingSenderId: "724851390490",
+  appId: "1:724851390490:web:f7359f0cabff119996f9a3",
+  measurementId: "G-Q9F16C2DNF"
+};
+    // Initialize Firebase
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+
+
+// 1. Function para pilitawin ang modal (Dapat naka-link sa Line 80 na onclick)
+window.showResetForm = function() {
+    const modal = document.getElementById('reset-modal');
+    if (modal) {
+        modal.style.display = 'block';
+    } else {
+        alert("Error: Modal element not found!");
+    }
+};
+
+// 2. Main Logic para sa Password Reset
+async function handleManualReset() {
+    const userIn = document.getElementById('reset-username').value.trim();
+    const refIn = document.getElementById('reset-referral').value.trim();
+    const newPass = document.getElementById('new-password').value.trim();
+    const status = document.getElementById('reset-status');
+
+    if (!userIn || !refIn || !newPass) {
+        status.innerText = "❌ Please fill up all fields!";
+        status.style.color = "#e11d48";
+        return;
+    }
+
+    try {
+        // MAHALAGA: Dapat may await at .get() para gumana ang .exists()
+        const userDoc = await db.collection("users").doc(userIn).get();
+
+        if (userDoc.exists) { // TANDAAN: Sa ibang Firebase version, walang () ang exists
+            const userData = userDoc.data();
+
+            if (userData.refId === refIn) { 
+                await db.collection("users").doc(userIn).update({
+                    pass: newPass 
+                });
+
+                status.innerText = "✅ Password Updated Successfully!";
+                status.style.color = "#059669";
+
+                setTimeout(() => {
+                    document.getElementById('reset-modal').style.display = 'none';
+                    status.innerText = "";
+                }, 2500);
+
+            } else {
+                status.innerText = "❌ Incorrect Referral ID!";
+                status.style.color = "#e11d48";
+            }
+        } else {
+            status.innerText = "❌ Username not found!";
+            status.style.color = "#e11d48";
+        }
+    } catch (error) {
+        console.error("Reset Error:", error);
+        status.innerText = "❌ Connection error. Try again.";
+        status.style.color = "#e11d48";
+    }
+}
+
+
+// --- REMEMBER ME LOGIC ---
+
+// 1. Function para i-save ang Username (Tawagin ito pagkatapos ng success login)
+window.saveCredentials = function() {
+    const rememberMe = document.getElementById('remember-me').checked;
+    const username = document.getElementById('userIn').value;
+
+    if (rememberMe) {
+        localStorage.setItem('rememberedUser', username);
+    } else {
+        localStorage.removeItem('rememberedUser');
+    }
+};
+
+// 2. Pag-load ng page, i-check kung may naka-save na username
+window.addEventListener('load', () => {
+    const savedUser = localStorage.getItem('rememberedUser');
+    if (savedUser) {
+        const userField = document.getElementById('userIn');
+        const rememberCheckbox = document.getElementById('remember-me');
+        
+        if(userField) userField.value = savedUser;
+        if(rememberCheckbox) rememberCheckbox.checked = true;
+    }
+});
+
+// function 2
+// --- ADMIN PANEL LOGIC (UPDATED WITH SECURITY) ---
+async function loadAdminLists() {
+    const pendingContainer = document.getElementById('pendingRequests');
+    const rejectedContainer = document.getElementById('rejectedHistory');
+
+    if (!pendingContainer || !rejectedContainer) return;
+
+    try {
+        // 1. 📂 PENDING LIST
+        db.collection("withdrawals").doc("pending").collection("list")
+            .where("status", "==", "PENDING")
+            .onSnapshot(async (snapshot) => {
+                pendingContainer.innerHTML = snapshot.empty ? '<p style="text-align:center;color:#64748b;">No pending requests</p>' : '';
+                
+                // Ginamit ang for...of loop para gumana ang await sa loob
+                for (const doc of snapshot.docs) {
+                    const data = doc.data();
+                    const docId = doc.id;
+                    
+                    // --- 🟢 DINAGDAG: LIVE POINTS DATA FETCH ---
+                    // Kinukuha nito ang latest balance at bonus mula sa "users" collection
+                    let liveInfo = "Loading points...";
+                    try {
+                        const uSnap = await db.collection("users").doc(data.username).get();
+                        if (uSnap.exists) {
+                            const uData = uSnap.data();
+                            const bal = uData.balance || 0;
+                            const bon = uData.bonus || 0;
+                            const label = (bon > 0) ? "WITH INVITE" : "NO INVITE";
+                            liveInfo = `Points: ${bal.toLocaleString()} | ${label}`;
+                        }
+                    } catch (e) { liveInfo = "Points: N/A"; }
+
+                    // --- 🔵 ORIGINAL BADGE LOGIC ---
+                    let duplicateBadge = (data.isDuplicate === true) 
+                        ? `<span style="background:#ef4444; color:white; padding:2px 8px; border-radius:5px; font-size:10px; margin-left:5px;">DUPLICATE 🚨</span>` 
+                        : "";
+
+                    // --- 🔵 ORIGINAL UI STRUCTURE WITH ADDED INFO ---
+                    pendingContainer.innerHTML += `
+                        <div style="background:#ffffff; padding:15px; border-radius:15px; margin-bottom:15px; border:1px solid #e2e8f0;">
+                            <div style="display:flex; justify-content:space-between;">
+                                <div>
+                                    <p style="margin:0; font-weight:bold;">${data.name || 'User'} ${duplicateBadge}</p>
+                                    <p style="margin:2px 0; color:#666; font-size:12px;">@${data.username}</p>
+                                    
+                                    <p style="margin:2px 0; color:#6366f1; font-size:11px; font-weight:800;">${liveInfo}</p>
+                                </div>
+                                <div style="text-align:right;">
+                                    <p style="margin:0; font-weight:bold; color:#ef4444;">₱${data.amount}</p>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-top:10px; padding:10px; background:#f8fafc; border-radius:10px;">
+                                <p style="margin:2px 0; font-size:12px;"><b>Number:</b> ${data.number}</p>
+                                <p style="margin:2px 0; font-size:12px;"><b>Method:</b> ${data.method}</p>
+                            </div>
+                            
+                            <div style="display: flex; gap: 8px; margin-top: 12px;">
+                                <button onclick="markAsPaid('${docId}')" style="flex: 2; background:#1e293b; color:white; border:none; padding:10px; border-radius:10px; font-weight:800; cursor:pointer;">
+                                    MARK AS PAID ✅
+                                </button>
+                                <button onclick="denyRequest('${docId}')" style="flex: 1; background:#ef4444; color:white; border:none; padding:10px; border-radius:10px; font-weight:800; cursor:pointer;">
+                                    DENIED ❌
+                                </button>
+                            </div>
+                        </div>`;
+                }
+            });
+
+    } catch (error) {
+        console.error("Error loading Admin Lists:", error);
+    }
+}
+
+
+// --- YOUR ORIGINAL LOGIC (HINDI BINAGO) ---
+    let isLoginMode = false;
+    let currentUser = null;
+    let startTime;
+    let encryptedAns = 0;
+    let securityKey = Math.random() * 500;
+    const DAILY_LIMIT = 145;
+    const REF_BONUS = 25.00;
+
+    function playSound(type) {
+        const sounds = { 'correct': 'sndCorrect', 'wrong': 'sndWrong', 'click': 'sndClick' };
+        const audio = document.getElementById(sounds[type]);
+        if(audio) { audio.currentTime = 0; audio.play().catch(() => {}); }
+    }
+
+function toggleAuth() {
+        playSound('click');
+        isLoginMode = !isLoginMode;
+        document.getElementById('authTitle').innerText = isLoginMode ? "Login to Account" : "Create New Account";
+        document.getElementById('mainAuthBtn').innerText = isLoginMode ? "Login Now" : "Claim Reward & Register";
+        document.getElementById('fullNameGroup').classList.toggle('hidden', isLoginMode);
+        document.getElementById('refGroup').classList.toggle('hidden', isLoginMode);
+    }
+    function copyRefCode() {
+            const code = document.getElementById('myRefCode').innerText;
+            if(code === "---") return;
+            navigator.clipboard.writeText(code).then(() => {
+                playSound('click');
+                const toast = document.getElementById('copyToast');
+                toast.classList.remove('hidden');
+                setTimeout(() => toast.classList.add('hidden'), 2000);
+            });
+        }
+
+ async function handleAuth() {
+    playSound('click');
+    const name = document.getElementById('nameIn').value.trim();
+    const user = document.getElementById('userIn').value.trim();
+    const pass = document.getElementById('passIn').value.trim();
+    const refCodeInput = document.getElementById('refIn').value.trim();
+
+    const deviceId = btoa(navigator.userAgent).substring(0, 16); 
+
+    if(!user || !pass) return alert("Fill up all fields!");
+
+    try {
+        if(!isLoginMode) {
+            if(!name) return alert("Name is required!");
+            
+            const userDoc = await db.collection("users").doc(user).get();
+            if(userDoc.exists) return alert("Username taken!");
+
+            const deviceCheck = await db.collection("users").where("deviceId", "==", deviceId).get();
+            if(deviceCheck.size >= 2) {
+                return alert("⚠️ Limit Reached: 2 accounts only per device!");
+            }
+
+            const duplicateStatus = deviceCheck.size >= 1 ? true : false;
+            const randomID = "MM-" + Math.floor(1000 + Math.random() * 9000);
+            
+            let userData = { 
+                name: name, 
+                pass: pass, 
+                balance: 1000.00, // Welcome Bonus: 1000 Points
+                bonus: 0, 
+                refId: randomID, 
+                history: [], 
+                dailyCount: 0, 
+                lastPlayedDate: new Date().toLocaleDateString(),
+                deviceId: deviceId, 
+                isDuplicate: duplicateStatus,
+                dateJoined: new Date().toLocaleDateString(), 
+            joinTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            referredBy: "", 
+            referrerReferralID: ""
+        };
+            
+
+            if(refCodeInput) {
+                if(refCodeInput === randomID) {
+                    return alert("You cannot use your own referral code!");
+                }
+                const refQuery = await db.collection("users").where("refId", "==", refCodeInput).get();
+                if(!refQuery.empty) {
+                    const referrerDoc = refQuery.docs[0];
+                    const referrerUser = referrerDoc.id; 
+                    
+                    if(referrerUser !== user) {
+     userData.referredBy = referrerUser;
+userData.referrerReferralID = refCodeInput;
+ await db.collection("users").doc(referrerUser).update({
+                            
+                        // UPDATE: Ang 2500 points ay papasok sa balance (Total Points)
+                            balance: firebase.firestore.FieldValue.increment(2500.00),
+                            // UPDATE: Ang bonus record ay 2500 din para pang-minus natin sa No Invite mamaya
+                            bonus: firebase.firestore.FieldValue.increment(25.00),
+                            hasNewBonus: true,
+                            history: firebase.firestore.FieldValue.arrayUnion({
+                                type: "REFERRAL_BONUS",
+                                amount: 25.00,
+                                fromUser: user, 
+                                refIdUsed: refCodeInput,
+                                date: new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' }),
+                                message: "CONGRATULATIONS YOU RECEIVE A REWARD REFERRAL BONUS(2500.00 Points is to ₱25.00) 🚀👏🎉"
+                            })
+                        });
+                    }
+                }
+            }
+        
+            await db.collection("users").doc(user).set(userData);
+            await checkDuplicateDevice(deviceId); 
+            alert(`Account Created! Your Code: ${randomID}`);
+            toggleAuth();
+
+        } else {
+            const userDoc = await db.collection("users").doc(user).get();
+            if(userDoc.exists) {
+                const data = userDoc.data();
+                
+                if(data.deviceId && data.deviceId !== deviceId) {
+                    return alert("⚠️ This account is locked to its original device!");
+                }
+
+                if(data.pass === pass) { 
+                    if(!data.activationKey) {
+                       return alert("🚫 ACCOUNT NOT ACTIVATED\n\nContact Admin to get your Key.");
+                    }
+                    
+                    currentUser = user; 
+                    localStorage.setItem("activeUser", user); 
+
+                    // --- DASHBOARD CALCULATION UPDATE ---
+                    const ppts = data.balance || 0;     // Total Points (Laro + Welcome + Referral)
+                    const bpts = data.bonus || 0;       // Referral Points Only
+
+                    // 1. Compute for "With Invites" (Lahat ng points kasama)
+                    const displayWith = (ppts / 100).toFixed(2);
+
+                    // 2. Compute for "No Invites" (Ibabawas ang referral bonus points)
+                    // Para Welcome + Laro lang ang mako-convert dito
+                    const displayNo = ((ppts - bpts) / 175).toFixed(2);
+
+                    // --- DASHBOARD DISPLAY ---
+                    if(document.getElementById('outPoints')) {
+                        document.getElementById('outPoints').innerText = ppts.toLocaleString();
+                    }
+
+                    if(document.getElementById('outPesoWith')) {
+                        document.getElementById('outPesoWith').innerText = "₱" + displayWith;
+                    }
+
+                    if(document.getElementById('outPesoNo')) {
+                        document.getElementById('outPesoNo').innerText = "₱" + displayNo;
+                    }
+saveCredentials();
+                    showDashboard(data); 
+                    updateHistory(); 
+                } else { 
+                    alert("Wrong Password!"); 
+                }
+            } else { 
+                alert("User not found!"); 
+            }
+        }
+    } catch (e) {
+        alert("❌ Error: " + e.message);
+    }
+}
+ async function showDashboard(data) {
+    // --- RULES MODAL: Lalabas lang sa NEW USER (!welcomeClaimed) ---
+    if (!data.welcomeClaimed) {
+        document.getElementById('rulesModal').classList.remove('hidden');
+    }
+
+    document.getElementById('authSection').classList.add('hidden');
+    document.getElementById('dashSection').classList.remove('hidden');
+    document.getElementById('outName').innerText = data.name;
+    document.getElementById('myRefCode').innerText = data.refId || "NONE";
+    
+    // --- UPDATED CALCULATION LOGIC (PARA SA BOXES) ---
+    const ppts = data.balance || 0;     // Total Points
+    const bMoney = data.bonus || 0;     // Referral Bonus Record (₱25)
+
+    // Compute values gamit ang ating Global Function
+    // displayWith: (Lahat ng points / 100)
+    const displayWith = calculatePesoValue(ppts, bMoney, 1); 
+    // displayNo: (Pure Points / 175) -> Ito ang magiging ₱5.71
+    const displayNo = calculatePesoValue(ppts, bMoney, 0); 
+
+    // I-update ang mga Boxes sa HTML
+    if(document.getElementById('outPoints')) {
+        document.getElementById('outPoints').innerText = ppts.toLocaleString();
+    }
+    if(document.getElementById('outPesoWith')) {
+        document.getElementById('outPesoWith').innerText = "₱" + displayWith;
+    }
+    if(document.getElementById('outPesoNo')) {
+        document.getElementById('outPesoNo').innerText = "₱" + displayNo; 
+    }
+
+    // --- 2. REFERRAL NOTIFICATION (Para sa Inviter na nakakuha ng bonus) ---
+    if (data.hasNewBonus === true) {
+        alert("You Receive a Reward Bonus (2500.00 Points is to  ₱25.00 from your Referral! Congratulations 👏🎉");
+        await db.collection("users").doc(currentUser).update({
+            hasNewBonus: false
+        });
+    }
+
+    const currentUrl = window.location.origin + window.location.pathname;
+    document.getElementById('shareLink').value = `${currentUrl}?ref=${data.refId || ""}`;
+    updateDisplay();
+}
+ async function updateDisplay() {
+            // Sa halip na localStorage, kukuha tayo ng fresh data sa Firebase
+            const userDoc = await db.collection("users").doc(currentUser).get();
+            if(!userDoc.exists) return;
+            
+            let data = userDoc.data();
+            const today = new Date().toLocaleDateString();
+
+            // LOGIC MO: Reset daily count paglipas ng 12 midnight
+            if(data.lastPlayedDate !== today) {
+                data.dailyCount = 0;
+                data.lastPlayedDate = today;
+                
+                // I-save ang reset sa Firebase
+                await db.collection("users").doc(currentUser).update({
+                    dailyCount: 0,
+                    lastPlayedDate: today
+                });
+            }
+
+            // I-display ang values (toFixed(2) para mukhang pera)
+            document.getElementById('outPoints').innerText = Number(data.balance).toFixed(2);
+            document.getElementById('outBonus').innerText = Number(data.bonus).toFixed(2);
+            document.getElementById('dailyLimitOut').innerText = `Daily Games: ${data.dailyCount} / ${DAILY_LIMIT}`;
+        }
+        
+ function generateMath() {
+    const ops = ['+', '-', '*', '/'];
+    // Random na pipili ng operator
+    const op = ops[Math.floor(Math.random() * ops.length)]; 
+    
+    let a, b, displayOp, finalAns;
+
+    if (op === '+') { // Addition: 5 + 2
+        a = Math.floor(Math.random() * 40) + 5;
+        b = Math.floor(Math.random() * 40) + 5;
+        finalAns = a + b;
+        displayOp = "+";
+    } 
+    else if (op === '-') { // Subtraction: 6 - 5
+        a = Math.floor(Math.random() * 50) + 20;
+        b = Math.floor(Math.random() * 19) + 1;
+        finalAns = a - b;
+        displayOp = "-";
+    } 
+    else if (op === '*') { // Multiplication: 6 x 3
+        a = Math.floor(Math.random() * 10) + 2;
+        b = Math.floor(Math.random() * 9) + 2;
+        finalAns = a * b;
+        displayOp = "×";
+    } 
+    else if (op === '/') { // Division: 8 ÷ 4
+        let tempAns = Math.floor(Math.random() * 9) + 1; 
+        b = Math.floor(Math.random() * 8) + 2; 
+        a = tempAns * b; 
+        finalAns = tempAns;
+        displayOp = "÷";
+    }
+
+    // Security Encryption
+    encryptedAns = finalAns + securityKey;
+
+    // Display sa Screen
+    document.getElementById('question').innerHTML = `${a} <span class="text-indigo-600">${displayOp}</span> ${b}`;
+    
+    // Linisin ang sagutan box para sa bagong tanong
+    document.getElementById('ansInput').value = "";
+    startTime = Date.now();
+}
+async function startCalculation() {
+    try {
+        // 1. Kunin ang fresh data mula sa Firebase (Anti-daya check)
+        const userDoc = await db.collection("users").doc(currentUser).get();
+        const data = userDoc.data();
+
+        // Check Daily Limit
+        if (data.dailyCount >= DAILY_LIMIT) {
+            // Siguraduhin na SAFE ang status kung limit na
+            localStorage.setItem('purePenaltyStatus', 'SAFE');
+            return alert("Daily limit reached! Balik ka uli bukas. 😊");
+        }
+
+        // --- CORRECTION: INALIS ANG 'UNFINISHED' DITO ---
+        // Ibig sabihin, kahit pumasok at lumabas siya rito, 
+        // wala siyang 25s penalty na makukuha pagbalik.
+        console.log("🔓 Viewing mode: No penalty yet. Penalty starts only after clicking Submit.");
+
+        if (typeof playSound === 'function') playSound('click');
+        
+        // 2. UI Transition (Papasok sa laro)
+        document.getElementById('readyUI').classList.add('hidden');
+        document.getElementById('playUI').classList.remove('hidden');
+        
+        // Ipakita ang math question
+        generateMath();
+
+    } catch (e) {
+        console.error("Pure Solving Error:", e);
+    }
+}
+
+async function processAnswer() {
+    // [TRIGGER] Dito pa lang magsisimula ang "Bantay"
+    // Kapag pinindot ang Submit, naka-record na 'UNFINISHED' siya.
+    localStorage.setItem('purePenaltyStatus', 'UNFINISHED');
+    console.log("🔒 Penalty locked: Exit now will trigger 25s penalty on re-entry.");
+
+    const userVal = parseInt(document.getElementById('ansInput').value);
+    
+    // UI Transition: Itago ang input, ipakita ang checking screen
+    document.getElementById('playUI').classList.add('hidden');
+    document.getElementById('waitUI').classList.remove('hidden');
+
+    const feedbackEl = document.getElementById('feedback'); 
+    const timerEl = document.getElementById('timer'); 
+
+    // --- STEP 1: 5s WAITING COUNTDOWN (CHECKING) ---
+    let waitTime = 5;
+    feedbackEl.innerHTML = "Checking your answer... ⏳";
+    if (timerEl) timerEl.innerText = waitTime;
+
+    const waitInterval = setInterval(() => {
+        waitTime--;
+        if (timerEl && waitTime >= 0) timerEl.innerText = waitTime;
+        if (waitTime <= 0) {
+            clearInterval(waitInterval);
+        }
+    }, 1000);
+
+    // --- STEP 2: AFTER 5s, LALABAS ANG RESULTA ---
+    setTimeout(async () => {
+        // Ang encryptedAns at securityKey ay dapat galing sa generateMath()
+        const isCorrect = userVal === Math.round(encryptedAns - securityKey);
+
+        if(isCorrect) {
+            if (typeof playSound === 'function') playSound('correct');
+            feedbackEl.innerHTML = "YOUR ANSWER IS CORRECT 💯 CONGRATULATIONS 👏<br><span style='color:#10b981'>+0.80 POINTS ✅</span>";
+            feedbackEl.className = "text-2xl font-black text-emerald-500 animate-bounce text-center";
+            
+            await db.collection("users").doc(currentUser).update({
+                balance: firebase.firestore.FieldValue.increment(0.80),
+                dailyCount: firebase.firestore.FieldValue.increment(1)
+            });
+        } else {
+            if (typeof playSound === 'function') playSound('wrong');
+            feedbackEl.innerHTML = "SORRY WRONG 🥹 !";
+            feedbackEl.className = "text-3xl font-black text-red-500 text-center";
+        }
+        
+        if (typeof updateDisplay === 'function') updateDisplay();
+
+        // --- STEP 3: 0.5s DELAY BAGO MAG-COOLDOWN (40s) ---
+        setTimeout(() => {
+            // Tatawagin ang iyong cooldownUI function
+            // Tandaan: Ang cooldownUI(40) ang magse-set ng 'SAFE' pagtapos ng 40s.
+            cooldownUI(40); 
+        }, 500); 
+
+    }, 5000);
+}
+
+  
+function runTimer(f, c) {
+            let t = f;
+            const timer = setInterval(() => {
+                document.getElementById('timer').innerText = t;
+                t--;
+                if(t < 0) { 
+                    clearInterval(timer); 
+                    cooldownUI(c); 
+                }
+            }, 1000);
+        }
+     // puresolving cooldown 
+async function cooldownUI(s) {
+    // 1. Taglines List
+    const mathTaglines = [
+        "🧠 Loading brain cells...",
+        "💧 Uminom muna ng tubig habang naghihintay.",
+        "🚀 Handa na ba sa susunod na round?",
+        "💅 Relax, 40 seconds lang 'to.",
+        "🤔 Fact: Ang '0' lang ang walang Roman Numeral!",
+        "⏳ Naghahanda ng bagong formula...",
+        "🔥 Galingan mo sa susunod na tanong!",
+        "🧠 Pure math is, in its way, the poetry of logical ideas."
+    ];
+
+    await updateDisplay(); 
+
+    const feedbackEl = document.getElementById('feedback');
+    const waitUI = document.getElementById('waitUI');
+    const playUI = document.getElementById('playUI');
+    const timerDisplay = document.getElementById('timer');
+
+    if (feedbackEl) {
+        feedbackEl.innerHTML = mathTaglines[Math.floor(Math.random() * mathTaglines.length)];
+    }
+    
+    let t = s; 
+    const timer = setInterval(() => {
+        // --- CRITICAL CHECK: STOP TIMER IF USER EXITS ---
+        // Kung ang waitUI ay tinago (hidden) o wala na sa screen, patayin ang timer
+        if (!waitUI || waitUI.classList.contains('hidden')) {
+            clearInterval(timer);
+            console.log("⚠️ Cooldown cancelled: User exited Pure Solving.");
+            return;
+        }
+
+        if (timerDisplay) {
+            timerDisplay.innerText = t;
+        }
+
+        if (t > 0 && t % 10 === 0 && feedbackEl) {
+            feedbackEl.innerHTML = mathTaglines[Math.floor(Math.random() * mathTaglines.length)];
+        }
+
+        if (t <= 0) { // Mas safe ang <= 0 kaysa < 0
+            clearInterval(timer);
+
+            localStorage.setItem('purePenaltyStatus', 'SAFE');
+            console.log("✅ Cooldown finished. Pure Solving is now SAFE.");
+
+            if (feedbackEl) feedbackEl.innerHTML = ""; 
+            
+            if (waitUI) waitUI.classList.add('hidden');
+            if (playUI) playUI.classList.remove('hidden');
+            
+            const ansInput = document.getElementById('ansInput');
+            if (ansInput) {
+                ansInput.value = ""; 
+                ansInput.focus(); 
+            }
+            
+            generateMath();
+        }
+
+        t--; 
+    }, 1000);
+}
+
+
+      function toggleWithdraw() {
+            playSound('click');
+            document.getElementById('gameUI').classList.toggle('hidden');
+            document.getElementById('withdrawUI').classList.toggle('hidden');
+            updateHistory();
+        }
+     
+
+async function handleWithdraw() {
+    if (typeof playSound === 'function') playSound('click');
+    
+    // 🛡️ 1. KUNIN ANG MGA VALUES
+    const selInput = document.getElementById("wdAmount");
+    const manInput = document.getElementById("manualAmount");
+    const numInput = document.getElementById("wdNumber");
+    const methodInput = document.getElementById("payoutMethod");
+
+    const sel = parseInt(selInput ? selInput.value : 0); 
+    const man = parseInt(manInput ? manInput.value : 0);
+    const num = numInput ? numInput.value : ""; 
+    const method = methodInput ? methodInput.value : "N/A";
+
+    if (!num) return alert("Paki-lagay ang mobile number!");
+
+    const userDoc = await db.collection("users").doc(currentUser).get();
+    let data = userDoc.data();
+    
+    const ngayon = new Date();
+    const araw = ngayon.getDay(); 
+    const oras = ngayon.getHours();
+
+    const allowed = [300, 600, 1000];
+    const isInvalidAmount = (man !== sel || !allowed.includes(man));
+    
+    let isCorrectSchedule = false;
+    if (sel === 300 && araw === 4 && oras === 8) isCorrectSchedule = true;
+    else if (sel === 600 && araw === 6 && oras === 7) isCorrectSchedule = true;
+    else if (sel === 1000 && araw === 1 && oras === 3) isCorrectSchedule = true;
+
+    // 🚩 PENALTY AREA (DITO ANG FIX PARA SA RECORDING)
+    if (!isCorrectSchedule || isInvalidAmount) {
+        if (typeof playSound === 'function') playSound('wrong');
+        let rason = !isCorrectSchedule ? "Invalid Schedule" : "Amount Mismatch";
+
+        try {
+            // STEP 1: I-RECORD MUNA SA ADMIN PANEL (admin_rejected collection)
+            await db.collection("admin_rejected").add({
+                username: currentUser,
+                name: data.name || "N/A",
+                refId: data.refId || "N/A",
+                amount: man || sel || 0,
+                payoutMethod: method, 
+                phoneNumber: num,     
+                reason: rason,
+                status: "REJECTED", // DAPAT MATCH SA LOADER FILTER MO
+                deviceId: data.deviceId || "Unknown",
+                isDuplicate: data.isDuplicate || false,
+                dateTime: ngayon.toLocaleString("en-PH"),
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            // STEP 2: BAWASAN ANG BALANCE NG PENALTY
+            await db.collection("users").doc(currentUser).update({
+                balance: firebase.firestore.FieldValue.increment(-30.00)
+            });
+
+            if (typeof updateDisplay === 'function') updateDisplay();
+            
+            // STEP 3: SAKA MAG-ALERT PAGKATAPOS MA-SAVE
+            return alert(`REJECTED: ${rason}. Nagbawas ng 30.00 Points penalty.`);
+
+        } catch (err) { 
+            console.error("Recording Error:", err);
+            return alert("Error recording rejection but penalty was applied.");
+        }
+    }
+
+    // --- 💰 SUCCESS AREA (WALANG PAGBABAGO DITO) ---
+    const bMoney = data.bonus || 0; 
+    let pointsNeeded = 0;
+
+    if (bMoney > 0) {
+        if (man === 300) pointsNeeded = 30000;
+        else if (man === 600) pointsNeeded = 60000;
+        else if (man === 1000) pointsNeeded = 100000;
+    } else {
+        if (man === 300) pointsNeeded = 52500;
+        else if (man === 600) pointsNeeded = 105000;
+        else if (man === 1000) pointsNeeded = 175000;
+    }
+
+    if (data.balance < pointsNeeded) {
+        if (typeof playSound === 'function') playSound('wrong');
+        return alert(`Kulang ang points! Kailangan mo ng ${pointsNeeded.toLocaleString()} points.`);
+    }
+
+    try {
+        const trackerID = data.refId || "N/A";
+        
+        const entry = {
+            name: data.name,
+            username: currentUser,
+            refId: trackerID,
+            amount: Number(man), 
+            number: num,
+            method: method,
+            date: ngayon.toLocaleString("en-PH"),
+            status: "PENDING",
+            deviceId: data.deviceId || "Unknown",
+            isDuplicate: data.isDuplicate || false, 
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        await db.collection("withdrawals").add(entry);
+
+        await db.collection("users").doc(currentUser).update({
+            balance: firebase.firestore.FieldValue.increment(-pointsNeeded),
+            bonus: 0, 
+            hasNewBonus: false,
+            history: firebase.firestore.FieldValue.arrayUnion({
+                amount: Number(man),
+                method: method,
+                totalBawas: pointsNeeded,
+                date: ngayon.toLocaleString("en-PH"),
+                status: "PENDING",
+                refId: trackerID
+            })
+        });
+
+        if (typeof playSound === 'function') playSound('correct');
+        alert(`SUCCESS ₱${man}!\nBawas: ${pointsNeeded.toLocaleString()} points.`);
+        
+        const finalDoc = await db.collection("users").doc(currentUser).get();
+        if (typeof showDashboard === 'function') showDashboard(finalDoc.data());
+        
+        if (typeof updateDisplay === 'function') updateDisplay();
+        if (typeof updateHistory === 'function') updateHistory();
+        if (typeof toggleWithdraw === 'function') toggleWithdraw();
+
+    } catch (error) {
+        alert("Error: " + error.message);
+    }
+}
+
+function toggleWithdraw() {
+    const withdrawUI = document.getElementById('withdrawUI');
+    const mainHub = document.getElementById('mainHub');
+    const extraBox = document.getElementById('dashboardExtra'); // Eto yung in-update natin sa Line 128
+
+    if (withdrawUI.classList.contains('hidden')) {
+        // Kapag binuksan ang Cashout Hub
+        withdrawUI.classList.remove('hidden');
+        if (mainHub) mainHub.classList.add('hidden');
+        if (extraBox) extraBox.classList.add('hidden'); // DITO MAWAWALA ANG EXTRA BOX
+    } else {
+        // Kapag bumalik sa Dashboard
+        withdrawUI.classList.add('hidden');
+        if (mainHub) mainHub.classList.remove('hidden');
+        if (extraBox) extraBox.classList.remove('hidden'); // DITO BABALIK ANG BOX
+    }
+    window.scrollTo(0, 0); // Para laging sa taas ang view
+}
+
+
+// 🛠️ ETO YUNG NAWALA KAYA NAG-ERROR KA KANINA:
+function updateHistory() {
+    try {
+        if (!currentUser) return;
+
+        // 🚀 GINAWANG .onSnapshot PARA REAL-TIME UPDATE (Kahit hindi mag-refresh)
+        db.collection("users").doc(currentUser).onSnapshot((doc) => {
+            if (!doc.exists) return;
+            
+            const data = doc.data();
+            const historyList = document.getElementById("historyList");
+            if (!historyList) return;
+
+            historyList.innerHTML = ""; // Clear list
+
+            if (data.history && data.history.length > 0) {
+                const withdrawalsOnly = [...data.history].filter(item => item.status);
+                
+                withdrawalsOnly.reverse().forEach(item => {
+                    const div = document.createElement("div");
+                    div.className = "bg-white p-3 rounded-xl shadow-sm border border-slate-100 mb-2";
+                    
+                    // --- STATUS BADGE (Dapat mag-match sa Admin na "PAID ✅") ---
+                    let statusClass = "bg-orange-100 text-orange-600"; // PENDING
+                    if (item.status === "PAID ✅" || item.status === "PAID") {
+                        statusClass = "bg-green-100 text-green-600";
+                    }
+                    if (item.status === "DENIED") statusClass = "bg-red-100 text-red-600";
+
+                    let reasonHtml = "";
+                    if (item.status === "DENIED") {
+                        reasonHtml = `<div style="margin-top:5px; padding:5px; background:#fef2f2; border-radius:8px; border:1px dashed #fca5a5;">
+                            <span style="color:#ef4444; font-size:9px; font-weight:bold; display:block; text-align:center;">
+                                ⚠️ ${item.reason || 'Alert! Duplicate Account'}
+                            </span>
+                        </div>`;
+                    }
+
+                    div.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="font-bold text-slate-800 text-sm">₱${item.amount}</div>
+                                <div class="text-[10px] text-blue-600 font-medium">ID: ${item.refId || 'N/A'}</div>
+                            </div>
+                            <span class="text-[9px] px-2 py-0.5 rounded-full font-bold ${statusClass}">
+                                ${item.status}
+                            </span>
+                        </div>
+                        ${reasonHtml} 
+                        <div class="flex justify-between items-center mt-2 pt-2 border-t border-slate-50">
+                            <div class="text-[9px] text-slate-500 italic"><b>Num:</b> ${item.number || 'N/A'} | ${item.method}</div>
+                            <div class="text-[9px] text-slate-400">${item.date}</div>
+                        </div>
+                    `;
+                    historyList.appendChild(div);
+                });
+            } else {
+                historyList.innerHTML = "<div class='text-center text-slate-400 text-[10px] py-4'>No history yet.</div>";
+            }
+        });
+    } catch (e) {
+        console.error("History Display Error:", e);
+    }
+}
+
+        //Secret Admin function 
+        let clicks = 0;
+        function adminSecret() {
+            clicks++;
+            if(clicks >= 5) { 
+                toggleAdmin(); 
+                clicks = 0; 
+            }
+            setTimeout(() => { clicks = 0; }, 3000);
+        }
+        
+  function toggleAdmin() {
+    const p = document.getElementById('adminPanel');
+    if(p.classList.contains('hidden')) {
+        const pin = prompt("Admin PIN:");
+        if(pin === "Mary@080322") { 
+            p.classList.remove('hidden'); 
+            refreshAdminList(); 
+   loadReferralMonitoring();   
+            // 🔥 DAPAT NANDITO ITO PARA MAWALA ANG "LOADING":
+            loadAdminLogs(); 
+            
+        }
+    } else { 
+        p.classList.add('hidden'); 
+    }
+}
+// ILAGAY ITO SA PINAKATAAS NG SCRIPT PARA GLOBAL
+function calculatePesoValue(points, bonusMoney, inviteCount) {
+    let ppts = points || 0;
+    let bMoney = bonusMoney || 0;
+    let inv = inviteCount || 0;
+
+    if (inv > 0) {
+        // WITH INVITE: Lahat ng points divided by 100
+        return (ppts / 100).toFixed(2);
+    } else {
+        // NO INVITE: (Total Points - Referral Points) divided by 175
+        // Kinukuha natin yung 2500 points (bMoney * 100) para ibawas
+        const referralPoints = bMoney * 100;
+        const purePoints = ppts - referralPoints;
+        const result = purePoints / 175;
+        return (result < 0 ? 0 : result).toFixed(2);
+    }
+}
+
+async function refreshAdminList() {
+    const list = document.getElementById('adminWithdrawList');
+    if (!list) return;
+    
+    // Loading State
+    list.innerHTML = "<p style='text-align:center; font-size:11px; color:#94a3b8; padding:20px;'>🔄 Loading Secured Data...</p>"; 
+
+    let playerRows = "";
+    let payoutRows = "";
+
+    try {
+        // 1. 👥 KUNIN ANG LAHAT NG PLAYERS (Player Database)
+        const playersSnapshot = await db.collection("users").limit(50).get();
+        playersSnapshot.forEach(doc => {
+            const user = doc.data();
+            
+            // --- 🟢 FIX: Ginamit ang tamang field names mula sa Firebase ---
+            const ppts = user.balance || 0; 
+            const bMoney = user.bonus || 0; 
+            
+            // --- 🟢 DAGDAG: Dual Conversion Logic ---
+            const withInviteVal = (ppts / 100).toFixed(2); // 100 pts = ₱1
+            const noInviteVal = ((ppts - (bMoney * 100) < 0 ? 0 : ppts - (bMoney * 100)) / 175).toFixed(2); // 175 pts = ₱1
+
+            // --- 🟢 DAGDAG: Status Label (With/No Invite) ---
+            const statusLabel = (bMoney > 0) 
+                ? `<span style="color:#22c55e; font-weight:900; font-size:9px;">[WITH INVITE]</span>` 
+                : `<span style="color:#94a3b8; font-size:9px;">[NO INVITE]</span>`;
+
+            playerRows += `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #f1f5f9; font-size:12px;">
+                    <div style="display:flex; flex-direction:column; gap:2px;">
+                        <span style="font-weight:bold; color:#1e293b; text-transform:uppercase;">${user.name || 'No Name'} ${statusLabel}</span>
+                        
+                        <span style="color:#64748b; font-size:10px; font-weight:bold;">
+                            Points: ${ppts.toLocaleString()}
+                        </span>
+                        
+                        <div style="display:flex; gap:10px; font-size:10px; font-weight:600;">
+                            <span style="color:#4f46e5;">With: ₱${withInviteVal}</span>
+                            <span style="color:#f59e0b;">No: ₱${noInviteVal}</span>
+                        </div>
+                        
+                        <span style="color:#94a3b8; font-size:9px;">ID: ${user.refId || 'N/A'}</span>
+                    </div>
+                    
+                    <div style="text-align:right;">
+                        <span style="color:#4f46e5; font-weight:900; display:block; font-size:14px;">₱${withInviteVal}</span>
+                        <button onclick="generateKeyForUser('${doc.id}')" style="margin-top:5px; background:#f1c40f; color:black; border:none; padding:5px 10px; border-radius:5px; font-size:10px; font-weight:bold; cursor:pointer;">
+                            🔑 KEY
+                        </button>
+                    </div>
+                </div>`;
+        });
+
+        // 2. 💰 KUNIN ANG LAHAT NG PENDING WITHDRAWALS (Payout Requests)
+        const payoutSnapshot = await db.collection("withdrawals")
+            .where("status", "==", "PENDING")
+            .get();
+
+        if (payoutSnapshot.empty) {
+            payoutRows = "<p style='font-size:11px; color:#94a3b8; text-align:center; padding:30px;'>☕ No pending requests.</p>";
+        } else {
+            payoutSnapshot.forEach(doc => {
+                const tx = doc.data();
+                const docId = doc.id;
+                const trackId = tx.refId || "NOT_FOUND";
+
+                // --- 🔵 RETAINED: DUPLICATE DETECTION LOGIC ---
+                let duplicateBadge = (tx.isDuplicate === true) 
+                    ? `<span style="background:#ef4444; color:white; font-size:8px; padding:2px 6px; border-radius:5px; font-weight:bold; margin-left:8px; vertical-align:middle;">DUPLICATE 🚨</span>` 
+                    : "";
+
+                payoutRows += `
+                    <div style="background:#ffffff; border:2px solid #e2e8f0; border-radius:20px; padding:15px; margin-top:12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                        
+                        <div style="display:flex; align-items:center; margin-bottom:10px; border-bottom:1px solid #f1f5f9; padding-bottom:8px;">
+                            <span style="background:#22c55e; color:white; font-size:7px; padding:2px 6px; border-radius:5px; font-weight:bold; margin-right:8px;">SECURED ✅</span>
+                            <span style="font-size:9px; color:#94a3b8; font-family:monospace;">ID: ${docId.substring(0,8)}</span>
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                            <div style="flex:1;">
+                                <span style="font-weight:900; color:#1e293b; font-size:14px; display:block; line-height:1.2;">
+                                    ${tx.name} ${duplicateBadge}
+                                </span>
+                                <span style="color:#64748b; font-size:11px;">@${tx.username}</span>
+                            </div>
+                            
+                            <div style="text-align:right; margin-left:10px;">
+                                <span style="color:#ef4444; font-weight:900; font-size:20px; display:block;">₱${tx.amount}</span>
+                            </div>
+                        </div>
+                        
+                        <div style="font-size:11px; color:#475569; margin-bottom:15px; line-height:1.6; background:#f8fafc; padding:12px; border-radius:15px; border:1px solid #e2e8f0;">
+                            <b style="color:#1e293b;">Number:</b> <span style="font-family:monospace; font-size:12px;">${tx.number}</span><br>
+                            <b style="color:#1e293b;">Method:</b> ${tx.method}<br>
+                            <div style="margin-top:8px; padding-top:8px; border-top:1px dashed #cbd5e1;">
+                                <span style="font-size:10px; color:#6366f1; font-family:monospace; font-weight:bold;">📍 TRACKER ID: ${trackId}</span><br>
+                                <span style="font-size:9px; color:#94a3b8;">Requested: ${tx.date}</span>
+                            </div>
+                        </div>
+                        
+                        <div style="display:flex; gap:8px;">
+                            <button onclick="approve('${docId}', '${tx.username}')" style="flex:2; background:#1e293b; color:white; border:none; padding:12px; border-radius:15px; font-weight:bold; font-size:12px; cursor:pointer; active:scale-95;">
+                                MARK AS PAID ✅
+                            </button>
+                            <button onclick="denyRequest('${docId}', '${tx.username}')" style="flex:1; background:#ef4444; color:white; border:none; padding:12px; border-radius:15px; font-weight:bold; font-size:12px; cursor:pointer; active:scale-95;">
+                                DENIED ❌
+                            </button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        // --- 🔵 FINAL ASSEMBLY (Retained Original Layout) ---
+        list.innerHTML = `
+            <div style="margin-bottom:30px; background:white; padding:15px; border-radius:20px; border:1px solid #f1f5f9;">
+                <h4 style="font-size:10px; color:#6366f1; font-weight:900; letter-spacing:1.5px; margin-bottom:15px; text-transform:uppercase; border-left:4px solid #6366f1; padding-left:10px;">👥 Player Database</h4>
+                <div style="max-height:250px; overflow-y:auto; padding-right:5px;">
+                    ${playerRows || "<p style='font-size:11px; color:#94a3b8; text-align:center;'>No active players.</p>"}
+                </div>
+            </div>
+
+            <div style="margin-top:20px;">
+                <h4 style="font-size:10px; color:#ef4444; font-weight:900; letter-spacing:1.5px; margin-bottom:15px; text-transform:uppercase; border-left:4px solid #ef4444; padding-left:10px;">💰 Payout Requests</h4>
+                ${payoutRows}
+            </div>
+        `;
+    } catch (error) {
+        list.innerHTML = `<p style="color:#ef4444; font-size:11px; text-align:center; padding:20px;">🚨 Security Error: ${error.message}</p>`;
+    }
+}
+
+ async function approve(k, idx) {
+    // 'k' dito ay ang username
+    try {
+        const userRef = db.collection("users").doc(k);
+        const doc = await userRef.get();
+        
+        if (doc.exists) {
+            let userData = doc.data();
+            
+            // 🛡️ [1] SECURITY ALERT: Bago i-approve, i-check ang Tracking ID
+            const trackId = userData.refId || "N/A";
+
+            if (userData.history && userData.history[idx]) {
+                // 🛡️ [2] DUPLICATE DETECTION: Check kung PAID na para hindi mag-double pay
+                if (userData.history[idx].status === "PAID ✅") {
+                    return alert("⚠️ ALERT: This transaction is ALREADY PAID!");
+                }
+
+                userData.history[idx].status = "PAID ✅";
+                // Isama ang Tracking ID sa final receipt record
+                userData.history[idx].trackingId = trackId; 
+                
+                await userRef.update({
+                    history: userData.history
+                });
+
+                // 📍 [3] TRACKING DEVICE: I-sync ang status sa Admin Collections
+                const withdrawQuery = await db.collection("withdrawals")
+                    .where("username", "==", k)
+                    .where("status", "==", "PENDING")
+                    .get();
+                
+                if (!withdrawQuery.empty) {
+                    // I-update ang mismong document sa withdrawals collection
+                    await withdrawQuery.docs[0].ref.update({ 
+                        status: "PAID ✅",
+                        processedTrackingId: trackId // Final tracking mark
+                    });
+                }
+
+                alert(`SUCCESS! Payout for ${k} is PAID ✅\n📍 Tracker: ${trackId}`);
+                refreshAdminList();
+            }
+        }
+    } catch (error) {
+        alert("Error updating status: " + error.message);
+    }
+}
+
+async function approve(docId, user) {
+    try {
+        // 🛡️ [1] DUPLICATE DETECTION
+        const checkDoc = await db.collection("withdrawals").doc(docId).get();
+        
+        if (!checkDoc.exists) {
+            return alert("🚨 Error: Transaction record not found.");
+        }
+
+        const data = checkDoc.data();
+        if (data.status === "PAID ✅") {
+            return alert("⚠️ SECURITY ALERT: This transaction is ALREADY PAID!");
+        }
+
+        const trackId = data.refId || "N/A";
+        const ngayon = new Date().toLocaleString("en-PH");
+        const cleanUsername = user.replace('@', '').trim();
+
+        // 🔥 [NEW] SAVE SA ADMIN PAID LOGS (Para pumasok sa Green Box)
+        await db.collection("admin_paid_logs").add({
+            username: cleanUsername,
+            amount: data.amount || "0",
+            refId: trackId,
+            method: data.method || "N/A",
+            number: data.number || "N/A",
+            date: ngayon,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 1. I-update ang status sa global 'withdrawals'
+        await db.collection("withdrawals").doc(docId).update({ 
+            status: "PAID ✅",
+            finalTracker: trackId 
+        });
+
+        // 2. I-update ang history sa account ng Player
+        const userRef = db.collection("users").doc(cleanUsername);
+        const userDoc = await userRef.get();
+        
+        if (userDoc.exists) {
+            let history = userDoc.data().history || [];
+            
+            history.forEach(tx => { 
+                // Siguraduhin na ang tamang pending request ang ma-update
+                if(tx.status === "PENDING" && tx.amount === data.amount) {
+                    tx.status = "PAID ✅";
+                    tx.approvedAt = ngayon;
+                    tx.tracker = trackId;
+                }
+            });
+            
+            await userRef.update({ history: history });
+        }
+
+        alert(`Payout Approved! ✅\n📍 TRACKER: ${trackId}\nStatus: SECURED & RECORDED`);
+        
+        // Refresh ang UI
+        loadAdminLogs(); 
+        if (typeof refreshAdminList === "function") refreshAdminList();
+
+    } catch (error) {
+        console.error("Approve Error:", error);
+        alert("Error: " + error.message);
+    }
+}
+
+ // --- IYONG MGA TAGLINES (RETAINED) ---
+        const mathTaglines = [
+            "🧠 Loading brain cells... please wait.",
+            "💧 Stay hydrated! Uminom muna ng tubig.",
+            "🚀 Ready for the next challenge? Malapit na!",
+            "💅 Relax, 40 seconds lang 'to. Deep breaths.",
+            "🤔 Math Fact: The word 'hundred' comes from 'hundrath', which means 120!",
+            "⏳ Preparing the next formula. Don't go away!",
+            "🔥 Leaderboard is heating up! Focus lang.",
+            "🧠 Pure math is, in its way, the poetry of logical ideas."
+        ];
+        
+        function startTaglineRotation() {
+    const taglineElement = document.getElementById('waiting-tagline');
+    if(!taglineElement) return;
+
+    // LOGIC MO: Magpalit ng tagline agad
+    const updateText = () => {
+        const randomText = mathTaglines[Math.floor(Math.random() * mathTaglines.length)];
+        taglineElement.innerText = randomText;
+    };
+    updateText();
+
+    // LOGIC MO: Magpapalit-palit bawat 8 seconds
+    const interval = setInterval(updateText, 8000);
+
+    // LOGIC MO: Ititigil ang pag-ikot pagkatapos ng 40 seconds
+    setTimeout(() => {
+        clearInterval(interval);
+        taglineElement.innerText = ""; // Burahin ang text pag start na ng game
+    }, 40000);
+}
+
+// 1. FUNCTION PARA SA PAG-COPY NG LINK
+function copyLink() {
+    const copyText = document.getElementById("shareLink");
+    
+    // Copy process
+    copyText.select();
+    copyText.setSelectionRange(0, 99999); 
+    navigator.clipboard.writeText(copyText.value);
+    
+    alert("Referral Link Copied! 🚀\nShare this to get(2500.00 Points is to  ₱25.00 per invite!");
+}
+
+// 2. AUTO-FILL LOGIC (Ito ang maglalagay ng code sa box pag-click ng link)
+window.addEventListener('load', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get('ref');
+    if (refCode) {
+        const refInput = document.getElementById('refIn');
+        if (refInput) {
+            refInput.value = refCode;
+            // Optional: lagyan natin ng kulay para halata
+            refInput.style.backgroundColor = "#ecfdf5"; 
+            refInput.style.borderColor = "#10b981";
+        }
+    }
+});
+
+
+function logout() {
+    location.reload();
+}
+async function approveWithdrawal(docId, username, amount) {
+    const confirmPaid = confirm(`Sigurado ka bang Mark ₱${amount} for @${username} as PAID ✅?`);
+    if (!confirmPaid) return;
+
+    const ngayon = new Date().toLocaleString("en-PH");
+    const cleanUsername = username.replace('@', '').trim();
+
+    try {
+        // [1] Kunin ang data mula sa pending list (Original Logic)
+        const docRef = db.collection("withdrawals").doc("pending").collection("list").doc(docId);
+        const snapshot = await docRef.get();
+        const pData = snapshot.exists ? snapshot.data() : {};
+
+        // --- 🟢 DAGDAG: RECORD SA PENDING LOGS (Para may history ka bago mabura) ---
+        await db.collection("pending_logs").add({
+            ...pData,
+            processedDate: ngayon,
+            action: "APPROVED",
+            adminTimestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // [2] RECORD SA ADMIN PAID LOGS (Original Logic - Para sa Green Box)
+        await db.collection("admin_paid_logs").add({
+            username: cleanUsername,
+            amount: amount,
+            date: ngayon,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // [3] I-UPDATE ANG HISTORY NG USER (Original Logic - Gawing PAID ✅)
+        const userRef = db.collection("users").doc(cleanUsername);
+        const userDoc = await userRef.get();
+        
+        if (userDoc.exists) {
+            let history = userDoc.data().history || [];
+            let updatedHistory = history.map(h => {
+                if (String(h.amount) === String(amount) && h.status === "PENDING") {
+                    return { ...h, status: "PAID ✅", date: ngayon };
+                }
+                return h;
+            });
+            await userRef.update({ history: updatedHistory });
+        }
+
+        // [4] BURAHIN SA PENDING LIST (Original Logic)
+        await docRef.delete();
+
+        alert("✅ Success! Recorded to Admin & User History.");
+        
+        // Check kung exists ang functions bago tawagin para iwas error
+        if (typeof loadAdminLogs === "function") loadAdminLogs();
+        if (typeof refreshAdminList === "function") refreshAdminList();
+
+    } catch (e) {
+        alert("🚨 Error: " + e.message);
+    }
+}
+
+// --- 🟢 DAGDAG: UPDATE PARA SA DENY REQUEST (Para sa Rejected Logs) ---
+async function denyRequest(docId, username, amount) {
+    const reason = prompt(`Bakit REJECTED ang ₱${amount} ni @${username}?`);
+    if (!reason) return;
+
+    const ngayon = new Date().toLocaleString("en-PH");
+    const cleanUsername = username.replace('@', '').trim();
+
+    try {
+        const docRef = db.collection("withdrawals").doc("pending").collection("list").doc(docId);
+        const snapshot = await docRef.get();
+        const pData = snapshot.exists ? snapshot.data() : {};
+
+        // 1. RECORD SA REJECTED LOGS (Dito lilitaw ang collection sa Firebase)
+        await db.collection("rejected_logs").add({
+            ...pData,
+            username: cleanUsername,
+            amount: amount,
+            reason: reason,
+            status: "REJECTED ❌",
+            date: ngayon,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 2. I-UPDATE ANG HISTORY NG USER (Gawing REJECTED ❌)
+        const userRef = db.collection("users").doc(cleanUsername);
+        const userDoc = await userRef.get();
+        if (userDoc.exists) {
+            let history = userDoc.data().history || [];
+            let updatedHistory = history.map(h => {
+                if (String(h.amount) === String(amount) && h.status === "PENDING") {
+                    return { ...h, status: "REJECTED ❌", date: ngayon, note: reason };
+                }
+                return h;
+            });
+            await userRef.update({ history: updatedHistory });
+        }
+
+        // 3. BURAHIN SA PENDING LIST
+        await docRef.delete();
+
+        alert("❌ Request Denied. Recorded to Rejected Logs.");
+        if (typeof refreshAdminList === "function") refreshAdminList();
+
+    } catch (e) {
+        alert("🚨 Error: " + e.message);
+    }
+}
+
+ // Function para kusa at laging updated ang Rejected History
+function startAutoRejectedLoader() {
+    console.log("MasterMath: Loading Rejected History...");
+
+    // Siguraduhin na 'admin_rejected' ang collection name mo sa Firebase
+    db.collection("admin_rejected")
+        .where("status", "==", "REJECTED")
+        .onSnapshot((querySnapshot) => {
+            // Target natin ang ID na adminRejectedList na nilagay mo sa HTML
+            const container = document.getElementById("adminRejectedList");
+            if (!container) return;
+
+            container.innerHTML = ""; // Linisin para 'di mag-double ang pula
+
+            if (querySnapshot.empty) {
+                container.innerHTML = "<p class='text-[10px] text-slate-400 italic text-center py-4'>Walang records.</p>";
+                return;
+            }
+
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                // ITO YUNG ORIGINAL RED DESIGN MO
+                container.innerHTML += `
+                    <div style="background-color: #fff1f2; padding: 12px; border-radius: 1rem; margin-bottom: 8px; border: 1px solid #ffe4e6; animation: fadeIn 0.4s ease;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 900; color: #1e293b; font-size: 13px;">${data.username}</span>
+                            <span style="font-weight: 900; color: #ef4444; font-size: 13px;">₱${data.amount}</span>
+                        </div>
+                        <p style="color: #ef4444; font-size: 10px; font-weight: 600; margin-top: 4px; line-height: 1.2;">
+                            ${data.reason || 'Invalid Schedule'} | ${data.dateTime || (data.date + ', ' + data.time)}
+                        </p>
+                    </div>
+                `;
+            });
+        }, (error) => {
+            console.error("Firebase Error: ", error);
+        });
+}
+
+// TAWAGIN AGAD PARA NANDUN NA SYA PAGBUKAS MO PA LANG
+startAutoRejectedLoader();
+
+
+async function closeRules() {
+    try {
+        const userRef = db.collection("users").doc(currentUser);
+        const userDoc = await userRef.get();
+        const userData = userDoc.data();
+
+        if (userData && userData.welcomeClaimed === true) {
+            document.getElementById('rulesModal').classList.add('hidden');
+            return;
+        }
+
+        // --- STEP 1: I-LOCK LANG ANG STATUS (Wala munang increment dito para iwas double) ---
+        await userRef.update({
+            welcomeClaimed: true
+        });
+
+        document.getElementById('rulesModal').classList.add('hidden');
+
+        // --- STEP 2: WELCOME REWARD ALERT ---
+        alert("YOU RECEIVE (1000.00 Points is to ₱10.00 with invites)( Will receive ₱5.71 No invite) REWARD CONGRATULATIONS 👏 🎉.");
+
+        // --- STEP 3: REFERRAL BONUS (₱25.00 PARA KAY KEEN) ---
+        if (userData.referredBy) {
+            const inviterRefId = userData.referredBy;
+            const snapshot = await db.collection("users").where("refId", "==", inviterRefId).get();
+
+            if (!snapshot.empty) {
+                const inviterDocId = snapshot.docs[0].id;
+                
+                await db.collection("users").doc(inviterDocId).update({
+                    balance: firebase.firestore.FieldValue.increment(2500.00),
+                    hasNewBonus: true
+                });
+                
+                console.log("Success: Referral Bonus sent to " + inviterRefId);
+            }
+        }
+
+        if (typeof updateDisplay === 'function') updateDisplay();
+
+    } catch (error) {
+        console.error("System Error:", error);
+    }
+}
+
+
+// ILAGAY ITO SA DULO NG SCRIPT MO
+async function checkDuplicateDevice(currentDeviceId) {
+    try {
+        const snapshot = await db.collection("users")
+            .where("deviceId", "==", currentDeviceId)
+            .get();
+
+        if (snapshot.size > 1) {
+            // Kunin lahat ng accounts sa device na ito at i-sort sa pinaka-una
+            let allDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            // Siguraduhin na ang pinakaunang account ang "Original"
+            // (Dapat may 'createdAt' field ka para mas accurate ang sorting)
+            
+            for (let i = 0; i < allDocs.length; i++) {
+                if (i === 0) {
+                    // SI ACCOUNT A (Ang Nauna)
+                    await db.collection("users").doc(allDocs[i].id).update({ isDuplicate: false });
+                } else {
+                    // SI ACCOUNT B, C... (Ang mga Duplicate)
+                    await db.collection("users").doc(allDocs[i].id).update({ isDuplicate: true });
+                }
+            }
+        }
+    } catch (e) {
+        console.log("Check error:", e);
+    }
+}
+
+// A. Gagawa ng Random 6-digit Code (Logic)
+function createActivationKey() {
+    const chars = "ABCDEF1234567890";
+    let key = "";
+    for (let i = 0; i < 6; i++) {
+        key += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return key;
+}
+
+// B. I-save ang Key sa Database ng Player (Action)
+async function generateKeyForUser(userId) {
+    const newKey = createActivationKey();
+    try {
+        await db.collection("users").doc(userId).update({
+            activationKey: newKey,
+            isActivated: false // Default na false hangga't hindi pa nila nai-input
+        });
+        
+        alert("✅ KEY GENERATED!\n\nUser: " + userId + "\nKey: " + newKey);
+        
+        if (typeof refreshAdminList === "function") {
+            refreshAdminList();
+        }
+    } catch (e) {
+        alert("❌ Error: " + e.message);
+    }
+}
+// Paid log
+async function denyRequest(docId, username) {
+    if (!confirm("I-deny ang request ni " + username + "?")) return;
+
+    const ngayon = new Date().toLocaleString("en-PH");
+    const cleanUsername = username.replace('@', '').trim();
+
+    try {
+        // [1] BALIK SA DATI: Main collection lang ang hanapin (Original Logic)
+        const docRef = db.collection("withdrawals").doc(docId);
+        const snapshot = await docRef.get();
+
+        if (!snapshot.exists) {
+            alert("🚨 Error: Hindi mahanap ang data.");
+            return;
+        }
+
+        const pData = snapshot.data();
+
+        // --- 🟢 DAGDAG: RECORD SA REJECTED LOGS (Para lumitaw ang folder sa Firebase) ---
+        await db.collection("rejected_logs").add({
+            ...pData,
+            username: cleanUsername,
+            action: "DENIED",
+            status: "REJECTED ❌",
+            date: ngayon,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // --- ?? DAGDAG: RECORD SA PENDING LOGS (Audit Trail) ---
+        await db.collection("pending_logs").add({
+            ...pData,
+            username: cleanUsername,
+            action: "REJECTED_BY_ADMIN",
+            date: ngayon,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // [2] Execute na agad ang pag-save (Original Logic)
+        executeDeny(docRef, pData, username);
+
+    } catch (e) {
+        alert("🚨 Error: " + e.message);
+    }
+}
+
+async function executeDeny(ref, data, username) {
+    const ngayon = new Date().toLocaleString("en-PH");
+    const cleanUsername = username.replace('@', '').trim();
+
+    try {
+        // [1] RECORD SA ADMIN LOGS (Para pumasok sa Red Box)
+        await db.collection("admin_denied_logs").add({
+            username: cleanUsername,
+            amount: data.amount,
+            date: ngayon,
+            reason: "Alert!! Duplicate Account",
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // [2] UPDATE PERSONAL HISTORY NG USER (Gawing Denied)
+        const userRef = db.collection("users").doc(cleanUsername);
+        const userDoc = await userRef.get();
+        
+        if (userDoc.exists) {
+            let history = userDoc.data().history || [];
+            let updatedHistory = history.map(h => {
+                // Check kung Pending at match ang amount
+                if (String(h.amount) === String(data.amount) && h.status === "PENDING") {
+                    return { ...h, status: "DENIED", reason: "Duplicate Account", date: ngayon };
+                }
+                return h;
+            });
+            await userRef.update({ history: updatedHistory });
+        }
+
+        // [3] BURAHIN SA WITHDRAWALS LIST
+        await ref.delete();
+
+        alert("✅ Denied Successfully!");
+        
+        // Refresh UI para mawala yung "Loading"
+        loadAdminLogs(); 
+        if (typeof refreshAdminList === "function") refreshAdminList();
+
+    } catch (err) {
+        alert("🚨 Error sa execute: " + err.message);
+    }
+}
+
+async function loadAdminLogs() {
+    const paidList = document.getElementById('adminPaidHistory');
+    const deniedList = document.getElementById('adminDeniedHistory');
+    if (!paidList || !deniedList) return;
+
+    try {
+        // 1. KUKUHA NG DATA PARA SA PAID (Limit 10)
+        const paidSnap = await db.collection("admin_paid_logs").orderBy("timestamp", "desc").limit(10).get();
+        let paidHTML = "";
+        paidSnap.forEach(doc => {
+            const d = doc.data();
+            paidHTML += `
+                <div style="background:white; padding:8px; border-radius:12px; margin-bottom:6px; border:1px solid #bbf7d0; font-size:9px;">
+                    <div style="font-weight:900; color:#166534;">@${d.username} - ₱${d.amount}</div>
+                    <div style="color:#64748b;">${d.date}</div>
+                </div>`;
+        });
+        paidList.innerHTML = paidHTML || "<p style='text-align:center; font-size:8px; color:#94a3b8;'>No paid records.</p>";
+
+        // 2. KUKUHA NG DATA PARA SA DENIED (Limit 10)
+        const deniedSnap = await db.collection("admin_denied_logs").orderBy("timestamp", "desc").limit(10).get();
+        let deniedHTML = "";
+        deniedSnap.forEach(doc => {
+            const d = doc.data();
+            deniedHTML += `
+                <div style="background:white; padding:8px; border-radius:12px; margin-bottom:6px; border:1px solid #fecaca; font-size:9px;">
+                    <div style="font-weight:900; color:#991b1b;">@${d.username} - ₱${d.amount}</div>
+                    <div style="color:#b91c1c; font-weight:bold; font-size:8px;">⚠️ ${d.reason}</div>
+                    <div style="color:#64748b;">${d.date}</div>
+                </div>`;
+        });
+        deniedList.innerHTML = deniedHTML || "<p style='text-align:center; font-size:8px; color:#94a3b8;'>No denied records.</p>";
+
+    } catch (e) {
+        console.error("Admin Logs Error:", e);
+    }
+}
+
+async function showReferralHistory() {
+    try {
+        let currentUser = "";
+        if (typeof firebase.auth === 'function' && firebase.auth().currentUser) {
+            currentUser = firebase.auth().currentUser.displayName || "GRACE";
+        } else {
+            const nameEl = document.getElementById('outName');
+            let uiName = nameEl ? nameEl.innerText.trim() : "MARY";
+            currentUser = (uiName === "MARY" || uiName === "" || uiName === "USER") ? "GRACE" : uiName;
+        }
+
+        const docId = currentUser.replace(/[@\s]/g, '').trim();
+        const userRef = db.collection("users").doc(docId);
+
+        // Force fetch mula sa server para updated sa GitHub
+        const userDoc = await userRef.get({ source: 'server' });
+
+        if (userDoc.exists) {
+            const data = userDoc.data();
+            let history = data.history || [];
+            
+            const finalLogs = history.filter(item => 
+                item.type === "REFERRAL_BONUS" || item.type === "referral_bonus"
+            );
+
+            if (finalLogs.length === 0) {
+                return alert("Wala ka pang referral history records para kay " + docId);
+            }
+
+            finalLogs.reverse();
+
+            let report = `📋 UPDATED REFERRAL MONITORING (${docId})\n`;
+            report += "--------------------------\n\n";
+            
+            finalLogs.forEach((log, index) => {
+                const amt = log.amount || "25.00";
+                // IBINALIK ANG CONGRATULATIONS MESSAGE DITO:
+                const msg = log.message || "CONGRATULATIONS YOU RECEIVE A REWARD REFERRAL BONUS(2500.00 Points is to ₱25.00) 🚀👏🎉";
+                
+                report += `${index + 1}. ✅ ${log.date || 'N/A'}\n`;
+                report += `👤 Mula: ${log.fromUser || 'User'}\n`;
+                report += `💰 Amount: ₱${amt}\n`;
+                report += `✨ ${msg}\n`; // Dito lalabas ang message
+                report += `--------------------------\n`;
+            });
+
+            alert(report);
+        } else {
+            alert("Record not found for: " + docId);
+        }
+    } catch (e) {
+        console.error("Full Error:", e);
+        alert("Sync Error: " + e.message);
+    }
+}
+
+let selectedGame = 'pure'; // Default selection
+
+function selectCategory(type) {
+    selectedGame = type;
+    const pureCard = document.getElementById('card-pure');
+    const tapCard = document.getElementById('card-tap');
+
+    if (type === 'pure') {
+        // Highlight Pure
+        pureCard.classList.replace('border-slate-200', 'border-blue-500');
+        pureCard.classList.add('shadow-md');
+        pureCard.style.opacity = "1";
+        // Dim Tap
+        tapCard.classList.replace('border-blue-500', 'border-slate-200');
+        tapCard.style.opacity = "0.6";
+    } else {
+        // Highlight Tap
+        tapCard.classList.replace('border-slate-200', 'border-blue-500');
+        tapCard.style.opacity = "1";
+        // Dim Pure
+        pureCard.classList.replace('border-blue-500', 'border-slate-200');
+        pureCard.style.opacity = "0.6";
+    }
+}
+
+function startSelectedGame() {
+    // 1. Kuhanin ang status mula sa browser memory
+    const tapStatus = localStorage.getItem('tapPenaltyStatus');
+    const pureStatus = localStorage.getItem('purePenaltyStatus');
+
+    // --- CHECK PARA SA PURE SOLVING ---
+    if (selectedGame === 'pure') {
+        // Kung may record na 'UNFINISHED' (ibig sabihin nag-submit pero hindi tinapos ang 5s o 40s)
+        if (pureStatus === 'UNFINISHED') {
+            // Lalabas ang 25s Visible Countdown sa screen
+            showPenaltyUI(25, 'purePenaltyStatus'); 
+            console.log("⚠️ Penalty Active: Hindi tinapos ang huling laro sa Pure Solving.");
+            return; // HARANG: Hindi itutuloy ang startCalculation()
+        }
+        
+        // KUNG SAFE (Viewing lang or Tapos na ang cooldown), TULOY ANG PASOK
+        startCalculation(); 
+    }
+
+    // --- CHECK PARA SA TAP GAME ---
+    else if (selectedGame === 'tap') {
+        // Kung may record na 'UNFINISHED' sa Tap Game
+        if (tapStatus === 'UNFINISHED') {
+            // Lalabas ang 25s Visible Countdown sa screen
+            showPenaltyUI(25, 'tapPenaltyStatus');
+            console.log("⚠️ Penalty Active: Hindi tinapos ang huling laro sa Tap Game.");
+            return; // HARANG: Hindi itutuloy ang startTapGame()
+        }
+        
+        // KUNG SAFE, TULOY ANG PASOK
+        startTapGame();    
+    }
+
+    // Siguraduhin na i-reset ang global flag kung kinakailangan
+    if (typeof isCooldownFinished !== 'undefined') {
+        isCooldownFinished = false; 
+    }
+}
+
+
+function show25sPenalty(gameKey) {
+    const overlay = document.getElementById('penaltyOverlay');
+    const timerSpan = document.getElementById('penaltyTimer');
+    const readyMsg = document.getElementById('readyMessage');
+
+    if (overlay) {
+        overlay.style.display = 'flex'; 
+        let timeLeft = 25;
+        if (timerSpan) timerSpan.innerText = timeLeft;
+        if (readyMsg) readyMsg.style.display = 'none';
+
+        let pInterval = setInterval(() => {
+            timeLeft--;
+            if (timerSpan) timerSpan.innerText = timeLeft;
+
+            if (timeLeft <= 0) {
+                clearInterval(pInterval);
+                
+                // 1. Gawin nang SAFE ang status
+                localStorage.setItem(gameKey, 'SAFE');
+                
+                if (readyMsg) {
+                    readyMsg.style.display = 'block';
+                    readyMsg.innerHTML = "READY! PASOK NA TAYO... 🚀"; 
+                }
+
+                // 2. AUTOMATIC NA PAPASOK SA LARO pagkatapos ng 2 seconds
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    
+                    // --- DITO ANG MAGIC ---
+                    // Itutuloy na natin ang laro base sa kung anong gameKey ang nilinis
+                    if (gameKey === 'purePenaltyStatus') {
+                        startCalculation(); // Pasok sa Pure Solving
+                    } else if (gameKey === 'tapPenaltyStatus') {
+                        startTapGame(); // Pasok sa Tap Game
+                    }
+                }, 2000);
+            }
+        }, 1000);
+    }
+}
+
+
+
+// ILAGAY SA PINAKABABA NG SCRIPT:
+function exitGame() {
+    // 1. Itago ang Play UI (yung game screen)
+    const playUI = document.getElementById('playUI');
+    if (playUI) playUI.classList.add('hidden');
+    
+    // 2. Ipakita uli ang Ready UI (yung category selection screen)
+    const readyUI = document.getElementById('readyUI');
+    if (readyUI) readyUI.classList.remove('hidden');
+    
+    // 3. I-clear ang input field para malinis sa susunod na laro
+    const inputField = document.getElementById('ansInput');
+    if (inputField) {
+        inputField.value = "";
+    }
+}
+
+let currentNumber = 0;
+let isCooldown = false;
+
+const taglines = [
+    "Mastering numbers one tap at a time!",
+    "Math is your superpower, Mary Grace!",
+    "Stay sharp, the next number is coming!",
+    "Precision is the key to MasterMath!"
+];
+
+function startTapGame() {
+    // Check muna kung may existing penalty sa localStorage
+    const penaltyStatus = localStorage.getItem('tapPenaltyStatus');
+
+    if (penaltyStatus === 'PENALTY') {
+        show25sPenalty('tapPenaltyStatus'); 
+        return; 
+    }
+
+    // --- LOGIC PARA SA TRACKING ---
+    // Kapag pumasok dito, ibig sabihin nasa loob na siya ng game session
+    localStorage.setItem('tapInGame', 'true'); 
+    isCooldownFinished = false; 
+
+    document.getElementById('readyUI').classList.add('hidden');
+    document.getElementById('tapGameUI').classList.remove('hidden');
+    generateNewTapNumber();
+}
+
+
+function generateNewTapNumber() {
+    // 1. I-lock ulit ang exit status (Simula ng bagong chance/round)
+    isCooldownFinished = false; 
+
+    const tapNumElement = document.getElementById('tapNumber');
+    if (tapNumElement) {
+        // Random number mula 1 hanggang 100
+        const randomNumber = Math.floor(Math.random() * 100) + 1;
+        tapNumElement.innerText = randomNumber;
+        console.log("New Random Number:", randomNumber);
+    }
+}
+
+
+async function checkTapAnswer(userChoice) {
+    const DAILY_LIMIT = 145; 
+
+    try {
+        // [TRIGGER] Markahan agad na UNFINISHED (Penalty Zone starts)
+        localStorage.setItem('tapPenaltyStatus', 'UNFINISHED');
+
+        const userDoc = await db.collection("users").doc(currentUser).get();
+        const userData = userDoc.data();
+        
+        // Check Daily Limit
+        if ((userData.dailyCount || 0) >= DAILY_LIMIT) {
+            const feedbackOverlay = document.getElementById('tapFeedback');
+            if (feedbackOverlay) feedbackOverlay.classList.remove('hidden');
+            document.getElementById('feedbackText').innerHTML = "🚫 LIMIT REACHED!";
+            // Gawing SAFE para hindi ma-stuck sa penalty screen kung limit na
+            localStorage.setItem('tapPenaltyStatus', 'SAFE'); 
+            return; 
+        }
+
+        isCooldownFinished = false; 
+
+        if (tapCheckTimer) { clearInterval(tapCheckTimer); tapCheckTimer = null; }
+
+        const tapNumElement = document.getElementById('tapNumber');
+        const currentNumber = parseInt(tapNumElement.innerText);
+        const correctAnswer = (currentNumber % 2 === 0) ? 'EVEN' : 'ODD';
+
+        const overlay = document.getElementById('tapFeedback');
+        const feedbackText = document.getElementById('feedbackText');
+        const timerDisplay = document.getElementById('cooldownTimer');
+
+        if (overlay) overlay.classList.remove('hidden');
+        feedbackText.innerText = "Checking... ⏳";
+
+        let checkTime = 5;
+        
+        tapCheckTimer = setInterval(async () => {
+            checkTime--;
+            if (timerDisplay) timerDisplay.innerText = `Checking in ${checkTime}...`;
+
+            if (checkTime <= 0) {
+                clearInterval(tapCheckTimer);
+                tapCheckTimer = null;
+
+                const isCorrect = userChoice.toUpperCase() === correctAnswer;
+
+                if (isCorrect) {
+                    if (typeof playSound === 'function') playSound('correct');
+                    feedbackText.innerHTML = "CORRECT! 💯<br><span style='color:#10b981'>+0.80 POINTS ✅</span>";
+                    
+                    // --- [FIX] DITO IBINABALIK ANG POINTS SA FIREBASE ---
+                    await db.collection("users").doc(currentUser).update({
+                        balance: firebase.firestore.FieldValue.increment(0.80),
+                        dailyCount: firebase.firestore.FieldValue.increment(1)
+                    });
+                    console.log("💰 Points successfully added to Firebase!");
+
+                } else {
+                    if (typeof playSound === 'function') playSound('wrong');
+                    feedbackText.innerHTML = "WRONG! 🥹";
+                }
+                
+                // I-update ang balance sa screen ni player
+                if (typeof updateDisplay === 'function') updateDisplay();
+
+                // Magsisimula na ang 40s Cooldown (Na magseset ng SAFE pagtapos)
+                setTimeout(() => { 
+                    if (typeof startTapCooldown === 'function') {
+                        startTapCooldown(40); 
+                    }
+                }, 800);
+            }
+        }, 1000);
+
+    } catch (e) {
+        console.error("Tap Game Error:", e);
+        // Failsafe: Gawing SAFE kung magka-error ang network para 'di ma-lock si player
+        localStorage.setItem('tapPenaltyStatus', 'SAFE');
+    }
+}
+
+function startTapCooldown(seconds) {
+    // 1. PATAYIN ANG LUMANG TIMERS (Para hindi mag-jump ang numbers at words)
+    if (tapCooldownTimer) { clearInterval(tapCooldownTimer); tapCooldownTimer = null; }
+    if (tapTaglineTimer) { clearInterval(tapTaglineTimer); tapTaglineTimer = null; }
+
+    const timerDisplay = document.getElementById('cooldownTimer');
+    const taglineDisplay = document.getElementById('cooldownTagline'); // Siguraduhin na may ID na ganito sa HTML mo
+    let timeLeft = seconds;
+
+    // 2. TAGLINE TIMER (Magpapalit every 3 or 4 seconds)
+    const tags = [
+        "🚀 Handa na sa susunod?", 
+        "💡 Focus lang, KAIBIGAN!", 
+        "🔥 Kaya mo 'yan!", 
+        "⭐ Galingan sa susunod!",
+        "📱 Chill ka muna saglit..."
+    ];
+
+    // Ipakita ang unang random tagline agad
+    if (taglineDisplay) taglineDisplay.innerText = tags[Math.floor(Math.random() * tags.length)];
+
+    tapTaglineTimer = setInterval(() => {
+        if (taglineDisplay) {
+            const randomTag = tags[Math.floor(Math.random() * tags.length)];
+            taglineDisplay.innerText = randomTag;
+        }
+    }, 4000); // Nagpapalit ang tagline bawat 4 seconds
+
+    // 3. MAIN COOLDOWN TIMER (40s)
+    tapCooldownTimer = setInterval(() => {
+        if (timerDisplay) timerDisplay.innerText = `Next in ${timeLeft}s`;
+        
+        if (timeLeft <= 0) {
+            // PATAYIN ANG LAHAT PAG ZERO NA
+            clearInterval(tapCooldownTimer);
+            clearInterval(tapTaglineTimer);
+            tapCooldownTimer = null; 
+            tapTaglineTimer = null;
+
+            isCooldownFinished = true; 
+            localStorage.setItem('tapPenaltyStatus', 'SAFE');
+            localStorage.removeItem('tapInGame'); 
+            
+            if (document.getElementById('tapFeedback')) document.getElementById('tapFeedback').classList.add('hidden');
+            if (typeof generateNewTapNumber === 'function') generateNewTapNumber();
+        }
+        timeLeft--;
+    }, 1000);
+}
+
+
+// Siguraduhin na ang mga ito ay nasa labas ng functions (Global)
+let feedbackInterval;
+let cooldownInterval;
+
+function exitTapGame() {
+    // --- PENALTY LOGIC START ---
+    // Ang penalty ay para LANG sa mga:
+    // 1. Hindi pa tapos ang cooldown (isCooldownFinished === false)
+    // 2. At may tumatakbong timer (tapCooldownTimer !== null)
+    
+    if (isCooldownFinished === false && tapCooldownTimer !== null) {
+        // May penalty lang kung tumakas habang nag-co-cooldown (40s)
+        const penaltyTime = Date.now() + (25 * 1000);
+        localStorage.setItem('penaltyTimestamp', penaltyTime);
+        console.log("⚠️ Penalty set: 25s dahil hindi tinapos ang cooldown.");
+    } else {
+        // SAFE: Entra-labas lang o kaya naman ay NATAPOS na ang 40s
+        localStorage.removeItem('penaltyTimestamp'); // Siguradong malinis
+        console.log("✅ Safe Exit: Malaya ang player.");
+    }
+    // --- PENALTY LOGIC END ---
+
+    // 1. PATAYIN ANG LAHAT NG TIMERS
+    if (tapCheckTimer) { clearInterval(tapCheckTimer); tapCheckTimer = null; }
+    if (tapCooldownTimer) { clearInterval(tapCooldownTimer); tapCooldownTimer = null; }
+    if (tapTaglineTimer) { clearInterval(tapTaglineTimer); tapTaglineTimer = null; }
+
+    // 2. ITAGO ANG UI
+    if (document.getElementById('tapGameUI')) document.getElementById('tapGameUI').classList.add('hidden');
+    if (document.getElementById('tapFeedback')) document.getElementById('tapFeedback').classList.add('hidden');
+
+    // 3. IBALIK ANG MAIN MENU
+    if (document.getElementById('readyUI')) document.getElementById('readyUI').classList.remove('hidden');
+
+    console.log("🚀 Game Exited!");
+}
+
+function exitPureSolving() {
+    // 1. Itago ang main game area
+    document.getElementById('playUI').classList.add('hidden');
+    
+    // 2. Itago ang timer at feedback area (Ito ang fix sa paglutang)
+    document.getElementById('waitUI').classList.add('hidden');
+    
+    // 3. Ipakita ulit ang Category Menu (Ready UI)
+    document.getElementById('readyUI').classList.remove('hidden');
+    
+    // 4. I-reset ang input box
+    document.getElementById('ansInput').value = '';
+}
+
+async function addTapPoints(amount) {
+    try {
+        // Tinitiyak na may valid user identifier (UID or Document ID)
+        const userIdentifier = auth.currentUser ? auth.currentUser.uid : (typeof currentUser !== 'undefined' ? currentUser : null);
+
+        if (userIdentifier) {
+            // ISANG DIRECT UPDATE PARA SA BALANCE AT DAILYCOUNT
+            // Hindi na kailangang mag-await ng get() para mabilis
+            await db.collection("users").doc(userIdentifier).update({
+                balance: firebase.firestore.FieldValue.increment(0.80),
+                dailyCount: firebase.firestore.FieldValue.increment(1)
+            });
+
+            console.log("✅ Points +0.80 | Daily Count: +1");
+            
+            // I-refresh ang display para gumalaw ang 40/145
+            if (typeof updateDisplay === "function") {
+                updateDisplay(); 
+            }
+        } else {
+            console.error("❌ Error: Walang User Identifier na nahanap.");
+        }
+    } catch (e) {
+        console.error("❌ Firebase Update Error:", e);
+        // Kahit may error, subukan pa rin i-update ang UI
+        if (typeof updateDisplay === "function") updateDisplay();
+    }
+}
+
+
+// Ilagay ito sa pinakataas ng iyong script
+var tapCheckTimer = null;
+var tapCooldownTimer = null;
+var tapTaglineTimer = null;
+var isCooldownFinished = true; // Mahalaga ito para sa penalty logic
+
+
+function showPenaltyUI(seconds, gameKey) {
+    const overlay = document.getElementById('penaltyOverlay');
+    const timerDisplay = document.getElementById('penaltyTimer');
+    const readyMsg = document.getElementById('readyMessage');
+    
+    // 1. IPAKITA ANG POPUP (Gawing 'flex' para pantay sa gitna)
+    if (overlay) {
+        overlay.style.display = 'flex';
+    }
+    
+    // I-reset ang display ng message para sigurado
+    if (readyMsg) readyMsg.style.display = 'none';
+
+    let currentTimer = seconds;
+    if (timerDisplay) timerDisplay.innerText = currentTimer;
+
+    const interval = setInterval(() => {
+        currentTimer--;
+        
+        if (timerDisplay) {
+            timerDisplay.innerText = currentTimer;
+        }
+        
+        if (currentTimer <= 0) {
+            clearInterval(interval);
+            
+            if (readyMsg) {
+                readyMsg.style.display = 'block';
+            }
+            
+            // 2. I-CLEAR ANG PENALTY SA SPECIFIC NA LARO LANG
+            // Ito yung 'tapPenaltyStatus' o 'purePenaltyStatus'
+            localStorage.setItem(gameKey, 'SAFE');
+
+            // Mawawala ang popup pagkatapos ng 2 seconds
+            setTimeout(() => {
+                if (overlay) overlay.style.display = 'none';
+                if (readyMsg) readyMsg.style.display = 'none'; 
+            }, 2000);
+        }
+    }, 1000);
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    // Alisin ang dot (.) sa unahan, sw.js lang dapat
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => console.log('Service Worker registered!'))
+      .catch(err => console.log('Service Worker failed:', err));
+  });
+}
+
+async function loadReferralMonitoring() {
+    const logBody = document.getElementById('adminReferralLog');
+    if (!logBody) return;
+
+    try {
+        // Kunin lahat ng players na may 'referredBy'
+        const snapshot = await db.collection("users")
+            .where("referredBy", "!=", "")
+            .get();
+
+        logBody.innerHTML = ""; // Linisin ang table
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            // 2500 points is to ₱25.00
+            const bonusDisplay = "2500 pts (₱25.00)"; 
+            
+            const row = `
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 8px; font-weight: 800;">${data.referredBy}</td>
+                    <td style="padding: 8px; color: #6366f1;">${data.referrerReferralID || '---'}</td>
+                    <td style="padding: 8px;">${doc.id}</td>
+                    <td style="padding: 8px; color: #10b981; font-weight: bold;">${bonusDisplay}</td>
+                    <td style="padding: 8px; font-size: 9px;">${data.dateJoined || ''}<br>${data.joinTime || ''}</td>
+                </tr>
+            `;
+            logBody.innerHTML += row;
+        });
+    } catch (e) {
+        console.error("Error loading referrals:", e);
+    }
+}
+
+
+</script>
+</body>
+</html>
